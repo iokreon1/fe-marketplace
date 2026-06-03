@@ -1,0 +1,32 @@
+name: Deploy to Github 
+on:
+  push:
+    branches:
+      - main
+jobs:
+  gh-pages-deploy:
+    name: Deploying to Github 
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      VITE_APP_NAME: "Blue"
+      VITE_API_BASE_URL: https://api.bluebwa.my.id/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Set Creds
+        run: |
+          git config user.name "xrafffcode"
+          git config user.email "yusfiwawan2@gmail.com"
+          
+      - name: Deploy
+        run: npm run deploy
