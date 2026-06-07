@@ -13,14 +13,14 @@ const store = ref({})
 
 const storeStore = useStoreStore()
 const { loading } = storeToRefs(storeStore)
-const { fetchStoreByUsername } = storeStore
+const { fetchStoreById } = storeStore
 
 const productStore = useProductStore()
 const { products, loading: loadingProducts } = storeToRefs(productStore)
 const { fetchProducts } = productStore
 
 const fetchStore = async () => {
-    const response = await fetchStoreByUsername(route.params.username)
+    const response = await fetchStoreById(route.params.id)
 
     store.value = response
 }

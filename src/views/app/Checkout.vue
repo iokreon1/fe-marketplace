@@ -142,24 +142,36 @@ const handleSubmit = async () => {
         return;
     }
 
+    if (user.value && user.value.buyer) {
+        transaction.value.buyer_id = user.value.buyer.id;
+    }
+
     const response = await createTransaction(transaction.value);
 
-    window.snap.pay(response.snap_token, {
-        onSuccess: function (result) {
-            showSuccessModal.value = true
-        },
-        onPending: function (result) {
-            /* You may add your own implementation here */
-            console.log(result);
-        },
-        onError: function (result) {
-            /* You may add your own implementation here */
-            console.log(result);
-        },
-        onClose: function () {
-            /* You may add your own implementation here */
+    if (response && response.snap_token) {
+        window.snap.pay(response.snap_token, {
+            onSuccess: function (result) {
+                showSuccessModal.value = true
+            },
+            onPending: function (result) {
+                /* You may add your own implementation here */
+                console.log(result);
+            },
+            onError: function (result) {
+                /* You may add your own implementation here */
+                console.log(result);
+            },
+            onClose: function () {
+                /* You may add your own implementation here */
+            }
+        })
+    } else {
+        if (error.value) {
+            alert('Validation Error: ' + JSON.stringify(error.value));
+        } else {
+            alert('Failed to process transaction. Please try again.');
         }
-    })
+    }
 };
 
 // Close modal functionality
@@ -177,6 +189,9 @@ onMounted(() => {
             product_id: p.id,
             qty: p.quantity
         }));
+    }
+    if (user.value && user.value.buyer) {
+        transaction.value.buyer_id = user.value.buyer.id;
     }
 });
 </script>
@@ -210,7 +225,7 @@ onMounted(() => {
                         <div class="flex items-center gap-[14px] overflow-hidden">
                             <div
                                 class="flex size-[92px] shrink-0 rounded-2xl bg-custom-background overflow-hidden items-center justify-center">
-                                <img :src="product.product_images.find(i => i.is_thumbnail).image"
+                                <img :src="product.product_images?.find(i => i.is_thumbnail)?.image"
                                     class="size-full object-contain" alt="icon">
                             </div>
                             <div class="flex flex-col flex-1 gap-[6px] overflow-hidden">

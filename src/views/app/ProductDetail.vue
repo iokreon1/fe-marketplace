@@ -7,9 +7,10 @@ import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { watch } from 'vue';
 import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute()
+const router = useRouter()
 
 const product = ref({})
 const activeImage = ref()
@@ -24,13 +25,17 @@ const quantity = ref(1)
 const fetchProduct = async () => {
     const response = await fetchProductBySlug(route.params.slug)
 
-    product.value = response
+    if (response) {
+        product.value = response
 
-    product.value.product_images.sort((a, b) => {
-        return (b.is_thumbnail === true) - (a.is_thumbnail === true)
-    })
+        if (product.value.product_images) {
+            product.value.product_images.sort((a, b) => {
+                return (b.is_thumbnail === true) - (a.is_thumbnail === true)
+            })
 
-    activeImage.value = product.value?.product_images?.find(img => img.is_thumbnail)
+            activeImage.value = product.value.product_images.find(img => img.is_thumbnail)
+        }
+    }
 }
 
 function setActiveImage(image) {
@@ -54,6 +59,7 @@ const addToCart = () => {
         ...product.value,
         quantity: quantity.value
     })
+    router.push({ name: 'app.cart' })
 }
 
 onMounted(() => {
@@ -85,7 +91,7 @@ watch(
                     Homepage
                 </RouterLink>
                 <span class="font-medium text-xl text-custom-grey">/</span>
-                <RouterLink :to="{ name: 'app.browse-category', params: { slug: product?.product_category?.slug } }"
+                <RouterLink :to="{ name: 'app.browse-category', params: { slug: product?.product_category?.slug || 'unknown' } }"
                     class="font-medium text-lg text-custom-grey last:font-semibold last:text-custom-blue">
                     {{ product?.product_category?.name }}
                 </RouterLink>
@@ -134,7 +140,7 @@ watch(
                                 </p>
                             </div>
                         </div>
-                        <RouterLink :to="{ name: 'app.store-detail', params: { username: product?.store?.username } }"
+                        <RouterLink :to="{ name: 'app.store-detail', params: { id: product?.store?.id || '' } }"
                             class="font-semibold text-lg text-custom-blue text-nowrap hover:underline"
                             v-if="product?.store">
                             Visit Store
@@ -295,12 +301,12 @@ watch(
                         </div>
                         <div class="flex flex-col gap-4">
                             <div class="flex items-center gap-5">
-                                <a @click.prevent="addToCart"
-                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 bg-custom-blue">
+                                <button type="button" @click.prevent="addToCart"
+                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 bg-custom-blue cursor-pointer">
                                     <img src="@/assets/images/icons/shopping-cart-white.svg"
                                         class="flex size-6 shrink-0" alt="icon">
                                     <span class="font-bold text-white">Add to Cart</span>
-                                </a>
+                                </button>
                                 <button
                                     class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 border border-custom-stroke">
                                     <img src="@/assets/images/icons/heart-grey.svg" class="flex size-6 shrink-0"

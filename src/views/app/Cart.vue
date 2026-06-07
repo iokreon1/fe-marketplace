@@ -62,7 +62,7 @@ const { decreaseQuantity, increaseQuantity, removeFromCart, toggleStoreSelection
                                 <div class="flex items-center gap-[14px] overflow-hidden">
                                     <div
                                         class="flex size-[92px] shrink-0 rounded-2xl bg-custom-background overflow-hidden items-center justify-center">
-                                        <img :src="product.product_images.find(i => i.is_thumbnail).image"
+                                        <img :src="product.product_images?.find(i => i.is_thumbnail)?.image"
                                             class="size-full object-contain" alt="icon">
                                     </div>
                                     <div class="flex flex-col flex-1 gap-[6px] overflow-hidden">

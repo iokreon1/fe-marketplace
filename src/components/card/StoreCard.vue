@@ -52,7 +52,7 @@ defineProps({
                             alt="icon">
                     </div>
                 </button>
-                <RouterLink :to="{ name: 'app.store-detail', params: { username: item.username } }"
+                <RouterLink :to="{ name: 'app.store-detail', params: { id: item.id } }"
                     class="group flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-[6px] bg-custom-blue/10 hover:bg-custom-blue transition-300">
                     <span class="font-semibold text-custom-blue group-hover:text-white transition-300">Visit
                         Store</span>

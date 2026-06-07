@@ -10,7 +10,13 @@ const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const { checkAuth, logout } = authStore
 
-onMounted(checkAuth)
+onMounted(async () => {
+    try {
+        await checkAuth()
+    } catch (error) {
+        // ignore if unauthorized
+    }
+})
 </script>
 
 <template>

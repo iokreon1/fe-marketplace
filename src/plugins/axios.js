@@ -7,7 +7,9 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 axios.defaults.headers.common['Content-Type'] = 'multipart/form-data'
 axios.defaults.headers.common['Accept'] = 'application/json'
-axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
 
 axios.interceptors.request.use(
     config => {
@@ -15,6 +17,8 @@ axios.interceptors.request.use(
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
+        } else {
+            delete config.headers.Authorization
         }
 
         return config

@@ -108,7 +108,7 @@ onMounted(fetchData)
                             class="flex items-center justify-center size-14 shrink-0 rounded-2xl p-4 gap-2 bg-custom-red/10">
                             <img src="@/assets/images/icons/trash-red.svg" class="flex size-6 shrink-0" alt="icon">
                         </button>
-                        <RouterLink :to="{ name: 'app.store-detail', params: { username: store.username } }"
+                        <RouterLink :to="{ name: 'app.store-detail', params: { id: store.id } }"
                             class="flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-2 bg-custom-blue">
                             <span class="font-semibold text-white">Visit Store Page</span>
                             <img src="@/assets/images/icons/arrow-circle-right-white.svg" class="flex size-6 shrink-0"

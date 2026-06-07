@@ -80,7 +80,7 @@ const router = createRouter({
           component: AppProductDetail
         },
         {
-          path: 'store/:username',
+          path: 'store/:id',
           name: 'app.store-detail',
           component: AppStoreDetail
         },
