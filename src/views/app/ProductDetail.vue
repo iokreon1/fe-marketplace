@@ -316,7 +316,7 @@ watch(
                             </div>
                             <p class="flex items-center gap-1 font-semibold text-custom-red text-lg leading-none">
                                 <img src="@/assets/images/icons/bag-tick-red.svg" class="size-5" alt="icon">
-                                120 Units Sold
+                                {{ product?.sold_count ?? 0 }} Units Sold
                             </p>
                         </div>
                     </div>

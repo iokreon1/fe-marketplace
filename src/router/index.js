@@ -35,6 +35,8 @@ import WithdrawalCreate from '@/views/admin/withdrawal/WithdrawalCreate.vue'
 import UserList from '@/views/admin/user/UserList.vue'
 import MyStore from '@/views/admin/store/MyStore.vue'
 import StoreCreate from '@/views/admin/store/StoreCreate.vue'
+import StoreEdit from '@/views/admin/store/StoreEdit.vue'
+import Search from '@/views/app/Search.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -73,6 +75,11 @@ const router = createRouter({
           path: 'browse-category/:slug',
           name: 'app.browse-category',
           component: BrowseCategory
+        },
+        {
+          path: 'search',
+          name: 'app.search',
+          component: Search
         },
         {
           path: 'product/:slug',
@@ -211,6 +218,16 @@ const router = createRouter({
             title: 'My Store',
             requiresAuth: true,
             permission: 'store-list'
+          }
+        },
+        {
+          path: 'my-store/edit',
+          name: 'admin.my-store.edit',
+          component: StoreEdit,
+          meta: {
+            title: 'Edit Store',
+            requiresAuth: true,
+            permission: 'store-edit'
           }
         },
         {

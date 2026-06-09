@@ -12,6 +12,7 @@ import { useRoute } from 'vue-router';
 const route = useRoute()
 
 const transaction = ref({})
+const showProducts = ref(true)
 
 const transactionStore = useTransactionStore()
 const { loading, success, error } = storeToRefs(transactionStore)
@@ -27,30 +28,41 @@ const fetchData = async () => {
     transaction.value.delivery_proof_url = Placeholder
 }
 
-const handleUpdateData = async () => {
-    await updateTransaction(transaction.value)
+const handleUpdateData = async (updatePayload) => {
+    await updateTransaction({
+        id: transaction.value.id,
+        ...updatePayload
+    })
 
     fetchData()
 }
 
-const handleAcceptOrder = () => {
-    transaction.value.delivery_proof = null
-    transaction.value.delivery_status = 'processing'
+const handleSimulatePayment = async () => {
+    await transactionStore.simulatePayment(transaction.value.id)
+    fetchData()
+}
 
-    handleUpdateData()
+const handleAcceptOrder = () => {
+    handleUpdateData({
+        delivery_status: 'processing'
+    })
 }
 
 const handleDeliverySubmit = () => {
-    transaction.value.delivery_status = 'delivering'
-
-    handleUpdateData()
+    const payload = {
+        delivery_status: 'delivering',
+        tracking_number: transaction.value.tracking_number
+    }
+    if (transaction.value.delivery_proof instanceof File) {
+        payload.delivery_proof = transaction.value.delivery_proof
+    }
+    handleUpdateData(payload)
 }
 
 const handleCompletedOrder = () => {
-    transaction.value.delivery_proof = null
-    transaction.value.delivery_status = 'completed'
-
-    handleUpdateData()
+    handleUpdateData({
+        delivery_status: 'completed'
+    })
 }
 
 const handleImageChange = (e) => {
@@ -82,7 +94,8 @@ onMounted(fetchData)
                     class="size-full object-contain object-right opacity-55 absolute" alt="icon">
                 <div class="relative flex items-center min-h-[68px] gap-[10px] p-4">
                     <img src="@/assets/images/icons/truck-time-white-fill.svg" class="flex size-9 shrink-0" alt="icon">
-                    <p class="font-bold text-lg text-white">Prepare the item for pickup by the courier</p>
+                    <p class="font-bold text-lg text-white" v-if="user?.role === 'store' || user?.role === 'admin'">Prepare the item for pickup by the courier</p>
+                    <p class="font-bold text-lg text-white" v-else>Penjual sedang menyiapkan barang Anda 🙌</p>
                 </div>
             </div>
             <div class="relative w-full rounded-[20px] bg-custom-orange overflow-hidden"
@@ -161,8 +174,8 @@ onMounted(fetchData)
                 </div>
             </section>
             <section class="flex flex-col w-full rounded-[20px] p-5 bg-white">
-                <button data-accordion-type="content" data-expand="Products" class="flex justify-between">
-                    <div class="flex flex-col gap-2">
+                <button @click="showProducts = !showProducts" class="flex justify-between w-full">
+                    <div class="flex flex-col gap-2 text-left">
                         <p class="font-bold text-xl">Product Details</p>
                         <div class="flex items-center gap-1">
                             <img src="@/assets/images/icons/shopping-cart-grey.svg" class="flex size-6 shrink-0"
@@ -172,9 +185,9 @@ onMounted(fetchData)
                         </div>
                     </div>
                     <img src="@/assets/images/icons/arrow-circle-up.svg" class="size-6 flex shrink-0 transition-300"
-                        alt="icon">
+                        :class="{ 'rotate-180': !showProducts }" alt="icon">
                 </button>
-                <div id="Products" class="flex flex-col gap-4 mt-5">
+                <div id="Products" class="flex flex-col gap-4 mt-5" v-show="showProducts">
                     <div class="card flex flex-col rounded-2xl border border-custom-stroke p-4 gap-5"
                         v-for="product in transaction?.transaction_details">
                         <div class="flex items-center w-full gap-5">
@@ -329,9 +342,15 @@ onMounted(fetchData)
                             <img src="@/assets/images/icons/money-grey.svg" class="size-6" alt="icon">
                             Payment Status
                         </p>
-                        <p class="font-bold text-lg leading-none text-custom-blue">
-                            {{ transaction.payment_status }}
-                        </p>
+                        <div class="flex items-center gap-2">
+                            <p class="font-bold text-lg leading-none text-custom-blue uppercase">
+                                {{ transaction.payment_status }}
+                            </p>
+                            <button v-if="transaction.payment_status === 'unpaid'" @click="handleSimulatePayment"
+                                class="rounded-lg px-3 py-1 bg-custom-green text-white font-semibold text-xs transition-300 hover:opacity-90 active:scale-95">
+                                Simulasi Bayar
+                            </button>
+                        </div>
                     </div>
                     <hr class="border-custom-stroke last:hidden">
                 </div>
@@ -376,7 +395,7 @@ onMounted(fetchData)
                         pending
                     </p>
                 </div>
-                <div class="flex flex-col text-center gap-4" v-if="transaction?.payment_status === 'paid'">
+                <div class="flex flex-col text-center gap-4" v-if="transaction?.payment_status === 'paid' && (user?.role === 'store' || user?.role === 'admin')">
                     <button @click="handleAcceptOrder"
                         class="h-14 w-full rounded-full flex items-center justify-center py-4 px-6 bg-custom-blue disabled:bg-custom-stroke transition-300">
                         <span class="font-semibold text-lg text-white">Accept Order</span>
@@ -427,42 +446,44 @@ onMounted(fetchData)
                         processing
                     </p>
                 </div>
-                <div class="flex items-center justify-between w-full">
-                    <div
-                        class="group relative flex size-[100px] rounded-2xl overflow-hidden items-center justify-center bg-custom-background">
-                        <img id="Thumbnail" :src="transaction.delivery_proof_url"
-                            data-default="@/assets/images/icons/gallery-default.svg" class="size-full object-contain"
-                            alt="icon" />
-                        <input type="file" id="File-Input" accept="image/*"
-                            class="absolute inset-0 opacity-0 cursor-pointer" @change="handleImageChange" />
+                <div class="flex flex-col gap-5" v-if="user?.role === 'store' || user?.role === 'admin'">
+                    <div class="flex items-center justify-between w-full">
+                        <div
+                            class="group relative flex size-[100px] rounded-2xl overflow-hidden items-center justify-center bg-custom-background">
+                            <img id="Thumbnail" :src="transaction.delivery_proof_url"
+                                data-default="@/assets/images/icons/gallery-default.svg" class="size-full object-contain"
+                                alt="icon" />
+                            <input type="file" id="File-Input" accept="image/*"
+                                class="absolute inset-0 opacity-0 cursor-pointer" @change="handleImageChange" />
+                        </div>
+                        <button type="button" id="Add-Photo"
+                            class="flex items-center justify-center rounded-2xl py-4 px-6 bg-custom-black text-white font-semibold text-lg">
+                            Add Photo
+                        </button>
                     </div>
-                    <button type="button" id="Add-Photo"
-                        class="flex items-center justify-center rounded-2xl py-4 px-6 bg-custom-black text-white font-semibold text-lg">
-                        Add Photo
+                    <div class="flex flex-col gap-3">
+                        <p class="font-semibold text-custom-grey">Tracking Number</p>
+                        <div class="group/errorState flex flex-col gap-2">
+                            <label class="group relative">
+                                <div class="input-icon">
+                                    <img src="@/assets/images/icons/barcode-grey.svg" class="flex size-6 shrink-0"
+                                        alt="icon">
+                                </div>
+                                <p class="input-placeholder">
+                                    Enter Tracking Number
+                                </p>
+                                <input type="number" id="Tracking" class="custom-input" placeholder=""
+                                    v-model="transaction.tracking_number">
+                            </label>
+                            <span class="input-error">Lorem dolor error message here</span>
+                        </div>
+                    </div>
+                    <button type="submit" id="Update-Status"
+                        class="h-14 w-full rounded-full flex items-center justify-center py-4 px-6 bg-custom-blue disabled:bg-custom-stroke transition-300"
+                        @click="handleDeliverySubmit">
+                        <span class="font-semibold text-lg text-white">Update Status</span>
                     </button>
                 </div>
-                <div class="flex flex-col gap-3">
-                    <p class="font-semibold text-custom-grey">Tracking Number</p>
-                    <div class="group/errorState flex flex-col gap-2">
-                        <label class="group relative">
-                            <div class="input-icon">
-                                <img src="@/assets/images/icons/barcode-grey.svg" class="flex size-6 shrink-0"
-                                    alt="icon">
-                            </div>
-                            <p class="input-placeholder">
-                                Enter Tracking Number
-                            </p>
-                            <input type="number" id="Tracking" class="custom-input" placeholder=""
-                                v-model="transaction.tracking_number">
-                        </label>
-                        <span class="input-error">Lorem dolor error message here</span>
-                    </div>
-                </div>
-                <button type="submit" id="Update-Status"
-                    class="h-14 w-full rounded-full flex items-center justify-center py-4 px-6 bg-custom-blue disabled:bg-custom-stroke transition-300"
-                    @click="handleDeliverySubmit">
-                    <span class="font-semibold text-lg text-white">Update Status</span>
-                </button>
             </section>
             <section class="flex flex-col w-full rounded-[20px] p-5 gap-5 bg-white"
                 v-if="transaction?.delivery_status === 'delivering'">

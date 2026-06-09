@@ -105,6 +105,38 @@ export const useStoreStore = defineStore("store", {
             }
         },
 
+        async updateStore(payload) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const formData = new FormData()
+                formData.append('_method', 'PUT')
+                formData.append('user_id', payload.user_id)
+                formData.append('name', payload.name)
+                formData.append('about', payload.about)
+                formData.append('phone', payload.phone)
+                formData.append('address_id', payload.address_id)
+                formData.append('city', payload.city)
+                formData.append('address', payload.address)
+                formData.append('postal_code', payload.postal_code)
+
+                if (payload.logo && payload.logo instanceof File) {
+                    formData.append('logo', payload.logo)
+                }
+
+                const response = await axiosInstance.post(`store/${payload.id}`, formData)
+
+                this.success = response.data.message
+
+                router.push({ name: 'admin.my-store' })
+            } catch (error) {
+                this.error = handleError(error)
+            } finally {
+                this.loading = false
+            }
+        },
+
         async approveStore(id) {
             this.loading = true
 

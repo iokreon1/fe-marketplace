@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { formatDate } from '@/helpers/format';
 
 const route = useRoute()
 
@@ -117,7 +118,7 @@ onMounted(fetchData)
                     </div>
                     <p class="flex items-center gap-2 font-semibold text-custom-grey leading-none">
                         <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-6 flex shrink-0" alt="icon">
-                        Created on 19/02/2020
+                        Created on {{ formatDate(store.created_at) }}
                     </p>
                 </div>
             </section>
@@ -159,7 +160,7 @@ onMounted(fetchData)
                     </div>
                     <p class="flex items-center gap-2 font-semibold text-custom-grey leading-none">
                         <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-6 flex shrink-0" alt="icon">
-                        Created on 19/02/2020
+                        Created on {{ formatDate(store.created_at) }}
                     </p>
                 </div>
             </section>

@@ -3,6 +3,7 @@ import { useStoreStore } from '@/stores/store';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
 import { ref } from 'vue';
+import { formatDate } from '@/helpers/format';
 
 const store = ref({})
 
@@ -40,7 +41,7 @@ onMounted(fetchStore)
                 </div>
                 <div class="flex items-center w-fit shrink-0 gap-1">
                     <img src="@/assets/images/icons/verify-star.svg" class="flex size-6 shrink-0" alt="icon"
-                        v-if="store?.is_verified">
+                         v-if="store?.is_verified">
                     <p class="font-bold text-custom-blue text-nowrap" v-if="store?.is_verified">VERIFIED</p>
                     <p class="font-bold text-custom-grey text-nowrap" v-else>NOT VERIFIED</p>
                 </div>
@@ -52,15 +53,15 @@ onMounted(fetchStore)
             </div>
             <div class="flex flex-col gap-3">
                 <div class="flex items-center gap-[14px]">
-                    <a href="#"
+                    <RouterLink :to="{ name: 'admin.my-store.edit' }"
                         class="flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-2 bg-custom-black">
                         <img src="@/assets/images/icons/edit-white.svg" class="flex size-6 shrink-0" alt="icon">
                         <span class="font-semibold text-white">Edit Store</span>
-                    </a>
+                    </RouterLink>
                 </div>
                 <p class="flex items-center gap-2 font-semibold text-custom-grey leading-none">
                     <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-6 flex shrink-0" alt="icon">
-                    Created on 19/02/2020
+                    Created on {{ formatDate(store.created_at) }}
                 </p>
             </div>
         </section>

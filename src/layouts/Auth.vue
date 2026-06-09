@@ -8,9 +8,22 @@ import { useRouter } from 'vue-router';
 const authStore = useAuthStore()
 const router = useRouter()
 
-onMounted(() => {
+onMounted(async () => {
     if (authStore.token) {
-        router.replace({ name: 'admin.dashboard' })
+        try {
+            let user = authStore.user
+            if (!user) {
+                user = await authStore.checkAuth()
+            }
+            if (user?.role === 'buyer') {
+                router.replace({ name: 'app.home' })
+            } else {
+                router.replace({ name: 'admin.dashboard' })
+            }
+            return
+        } catch (error) {
+            // ignore and allow login if token is invalid
+        }
     }
 
     new Swiper('.swiper', {

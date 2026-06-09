@@ -27,7 +27,9 @@ const handleImageChange = (e) => {
 const handleSubmit = async () => {
     await register(form.value)
 
-    router.push({ name: 'auth.login' })
+    if (!error.value) {
+        router.push({ name: 'auth.login' })
+    }
 }
 </script>
 

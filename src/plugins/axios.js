@@ -17,8 +17,10 @@ axios.interceptors.request.use(
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
         } else {
             delete config.headers.Authorization
+            delete axios.defaults.headers.common['Authorization']
         }
 
         return config

@@ -1,21 +1,54 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth';
+import { useProductCategoryStore } from '@/stores/productCategory';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
-import { onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const showDropdownProfile = ref(false)
+const showDropdownCategories = ref(false)
+const searchQuery = ref('')
 
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 const { checkAuth, logout } = authStore
 
+const productCategoryStore = useProductCategoryStore()
+const { productCategories } = storeToRefs(productCategoryStore)
+
+const router = useRouter()
+
+const handleSearch = () => {
+    if (searchQuery.value.trim()) {
+        router.push({ name: 'app.search', query: { q: searchQuery.value } })
+    }
+}
+
+const closeDropdowns = (e) => {
+    if (!e.target.closest('#Profile-Button') && !e.target.closest('#Profile-Dropdown')) {
+        showDropdownProfile.value = false
+    }
+    if (!e.target.closest('#Categories-Button') && !e.target.closest('#Categories-Dropdown')) {
+        showDropdownCategories.value = false
+    }
+}
+
 onMounted(async () => {
+    window.addEventListener('click', closeDropdowns)
     try {
         await checkAuth()
     } catch (error) {
         // ignore if unauthorized
     }
+    try {
+        await productCategoryStore.fetchProductCategories()
+    } catch (error) {
+        console.error('Failed to fetch categories:', error)
+    }
+})
+
+onUnmounted(() => {
+    window.removeEventListener('click', closeDropdowns)
 })
 </script>
 
@@ -27,21 +60,39 @@ onMounted(async () => {
                     <RouterLink :to="{ name: 'app.home' }" class="flex shrink-0">
                         <img src="@/assets/images/logos/logo.svg" class="h-8" alt="logo">
                     </RouterLink>
-                    <button type="button" class="flex items-center gap-2 shrink-0">
-                        <img src="@/assets/images/icons/menu-grey.svg" class="size-6 flex shrink-0" alt="icon">
-                        <p class="flex items-center gap-1 font-semibold text-custom-grey">
-                            Categories
-                            <img src="@/assets/images/icons/arrow-down-grey.svg" class="size-4" alt="icon">
-                        </p>
-                    </button>
-                    <form action="#" class="w-full">
+                    <div class="relative shrink-0">
+                        <button type="button" id="Categories-Button" @click="showDropdownCategories = !showDropdownCategories" class="flex items-center gap-2 shrink-0">
+                            <img src="@/assets/images/icons/menu-grey.svg" class="size-6 flex shrink-0" alt="icon">
+                            <p class="flex items-center gap-1 font-semibold text-custom-grey">
+                                Categories
+                                <img src="@/assets/images/icons/arrow-down-grey.svg" class="size-4" alt="icon">
+                            </p>
+                        </button>
+                        <div id="Categories-Dropdown" class="absolute transform top-[calc(100%+24px)] left-0 z-30"
+                            v-if="showDropdownCategories">
+                            <nav
+                                class="flex flex-col w-[240px] rounded-[20px] py-4 px-4 gap-3 bg-white shadow-[0px_6px_30px_0px_#00000017] border border-custom-stroke">
+                                <RouterLink 
+                                    v-for="cat in productCategories" 
+                                    :key="cat.id"
+                                    :to="{ name: 'app.browse-category', params: { slug: cat.slug } }"
+                                    @click="showDropdownCategories = false"
+                                    class="flex items-center gap-3 font-semibold text-custom-grey hover:text-custom-blue py-2 px-3 rounded-xl hover:bg-custom-blue/5 transition-300 w-full text-left"
+                                >
+                                    <img :src="cat.image" class="size-5 shrink-0 object-contain" alt="icon">
+                                    <span class="truncate">{{ cat.name }}</span>
+                                </RouterLink>
+                            </nav>
+                        </div>
+                    </div>
+                    <form @submit.prevent="handleSearch" class="w-full">
                         <label
                             class="flex items-center w-full h-14 rounded-[18px] p-4 px-6 gap-2 bg-white border-[1.5px] border-custom-stroke focus-within:border-custom-black transition-300">
                             <img src="@/assets/images/icons/search-normal-grey.svg" class="flex size-6 shrink-0"
                                 alt="icon">
                             <input type="text"
                                 class="appearance-none w-full placeholder:text-custom-grey font-semibold focus:outline-none"
-                                placeholder="Search any products">
+                                placeholder="Search any products" v-model="searchQuery">
                         </label>
                     </form>
                     <div class="flex items-center gap-3 shrink-0">
@@ -62,7 +113,7 @@ onMounted(async () => {
                             <p class="font-medium text-white">Sign In/Register</p>
                         </RouterLink>
                         <div class="relative" v-if="user">
-                            <button @click="showDropdownProfile = !showDropdownProfile"
+                            <button id="Profile-Button" @click="showDropdownProfile = !showDropdownProfile"
                                 class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden">
                                 <img :src="user.profile_picture" class="size-full" alt="icon">
                             </button>

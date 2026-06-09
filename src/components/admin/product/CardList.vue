@@ -1,5 +1,6 @@
 <script setup>
 import { can } from '@/helpers/permissionHelper';
+import { formatDate } from '@/helpers/format';
 
 defineProps({
     item: {
@@ -52,7 +53,7 @@ const emit = defineEmits(['delete'])
         <div class="flex items-center justify-between">
             <p class="flex items-center gap-2 font-semibold text-custom-grey leading-none">
                 <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-6 flex shrink-0" alt="icon">
-                Created on 19/02/2020
+                Created on {{ formatDate(item.created_at) }}
             </p>
             <div class="flex items-center justify-end gap-[14px]">
                 <button

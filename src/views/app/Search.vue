@@ -1,5 +1,4 @@
 <script setup>
-import { useProductCategoryStore } from '@/stores/productCategory';
 import { useProductStore } from '@/stores/product';
 import ProductCard from '@/components/card/ProductCard.vue';
 import { storeToRefs } from 'pinia';
@@ -7,27 +6,16 @@ import { ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute()
-
-const productCategory = ref({})
-const currentPage = ref(1)
-
-const productCategoryStore = useProductCategoryStore()
-const { loading } = storeToRefs(productCategoryStore)
-const { fetchProductCategoryBySlug } = productCategoryStore
-
 const productStore = useProductStore()
-const { products, loading: loadingProducts, meta } = storeToRefs(productStore)
+const { products, loading, meta } = storeToRefs(productStore)
 const { fetchProductsPaginated, loadMoreProducts } = productStore
 
-const fetchProductCategory = async () => {
-    const response = await fetchProductCategoryBySlug(route.params.slug)
-    productCategory.value = response
-}
+const searchQuery = ref(route.query.q || '')
+const currentPage = ref(1)
 
-const loadCategoryProducts = async (isLoadMore = false) => {
-    if (!productCategory.value?.id) return
+const loadSearchProducts = async (queryStr, isLoadMore = false) => {
     const params = {
-        product_category_id: productCategory.value.id,
+        search: queryStr,
         row_per_page: 8,
         page: currentPage.value
     }
@@ -40,24 +28,20 @@ const loadCategoryProducts = async (isLoadMore = false) => {
     }
 }
 
-const initData = async () => {
-    await fetchProductCategory()
-    await loadCategoryProducts(false)
-}
-
 const handleLoadMore = async () => {
     if (meta.value.current_page < meta.value.last_page) {
         currentPage.value++
-        await loadCategoryProducts(true)
+        await loadSearchProducts(searchQuery.value, true)
     }
 }
 
-onMounted(initData)
+onMounted(() => {
+    loadSearchProducts(searchQuery.value)
+})
 
-watch(() => route.params.slug, async (newSlug) => {
-    if (newSlug) {
-        await initData()
-    }
+watch(() => route.query.q, (newQuery) => {
+    searchQuery.value = newQuery || ''
+    loadSearchProducts(searchQuery.value)
 })
 </script>
 
@@ -71,34 +55,32 @@ watch(() => route.params.slug, async (newSlug) => {
                 </RouterLink>
                 <span class="font-medium text-xl text-custom-grey">/</span>
                 <span class="font-semibold text-lg text-custom-blue">
-                    {{ productCategory?.name }}
+                    Search Results
                 </span>
             </div>
-            <h1 class="font-extrabold text-[32px] capitalize">Explore based on {{ productCategory?.name || 'Category' }}</h1>
+            <h1 class="font-extrabold text-[32px] capitalize">Search Results for: "{{ searchQuery }}"</h1>
             <div class="flex items-center gap-4">
                 <div class="group flex items-center gap-2">
                     <img src="@/assets/images/icons/box-grey.svg" class="flex size-5 shrink-0" alt="icon">
-                    <span class="font-semibold text-custom-grey">{{ meta?.total || 0 }} Total Products</span>
+                    <span class="font-semibold text-custom-grey">{{ meta.total || 0 }} Products Found</span>
                 </div>
                 <div class="group flex items-center gap-2">
                     <img src="@/assets/images/icons/verify-star-grey.svg" class="flex size-5 shrink-0" alt="icon">
-                    <span class="font-semibold text-custom-grey">Authenticity Guaranteed</span>
+                    <span class="font-semibold text-custom-grey">Best Match</span>
                 </div>
             </div>
         </div>
     </header>
+
     <main class="flex flex-col gap-[100px] w-full max-w-[1280px] px-[52px] mt-[72px] mb-[100px] mx-auto">
-        <section id="Popular" class="flex flex-col gap-9">
-            <div class="flex items-center justify-between">
-                <h2 class="font-extrabold text-[32px]">Products List 🔥</h2>
-            </div>
+        <section id="Search-Results" class="flex flex-col gap-9">
             <div class="grid grid-cols-4 gap-6">
                 <ProductCard v-for="product in products" :key="product.id" :item="product" />
             </div>
-
-            <div v-if="products.length === 0 && !loadingProducts" class="flex flex-col items-center justify-center py-20 gap-4">
+            
+            <div v-if="products.length === 0 && !loading" class="flex flex-col items-center justify-center py-20 gap-4">
                 <img src="@/assets/images/icons/box-grey.svg" class="size-20 opacity-30" alt="empty">
-                <p class="font-bold text-custom-grey text-xl">No products found in this category.</p>
+                <p class="font-bold text-custom-grey text-xl">No products found matching your search.</p>
             </div>
 
             <button 

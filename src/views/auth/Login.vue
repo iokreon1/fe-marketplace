@@ -20,12 +20,15 @@ const handleSubmit = async () => {
         error.value = {
             email: ['Email atau password salah']
         }
+        return
     }
 
-    if (response.role === 'buyer') {
-        router.push({ name: 'app.home' })
-    } else {
-        router.push({ name: 'admin.dashboard' })
+    if (response) {
+        if (response.role === 'buyer') {
+            router.push({ name: 'app.home' })
+        } else {
+            router.push({ name: 'admin.dashboard' })
+        }
     }
 }
 </script>

@@ -2,6 +2,7 @@ import { handleError } from "@/helpers/errorHelper";
 import { axiosInstance } from "@/plugins/axios";
 import router from "@/router";
 import { defineStore } from "pinia";
+import { useAuthStore } from "@/stores/auth";
 
 export const useProductStore = defineStore("product", {
     state: () => ({
@@ -46,6 +47,21 @@ export const useProductStore = defineStore("product", {
             }
         },
 
+        async loadMoreProducts(params) {
+            this.loading = true
+
+            try {
+                const response = await axiosInstance.get(`product/all/paginated`, { params })
+
+                this.products = [...this.products, ...response.data.data.data]
+                this.meta = response.data.data.meta
+            } catch (error) {
+                this.error = handleError(error)
+            } finally {
+                this.loading = false
+            }
+        },
+
         async fetchProductById(id) {
             this.loading = true
 
@@ -79,7 +95,13 @@ export const useProductStore = defineStore("product", {
             this.error = null
 
             try {
-                const response = await axiosInstance.post('product', payload)
+                const authStore = useAuthStore()
+                const storeId = authStore.user?.store?.id
+
+                const response = await axiosInstance.post('product', {
+                    ...payload,
+                    store_id: storeId
+                })
 
                 this.success = response.data.message
 
@@ -96,8 +118,12 @@ export const useProductStore = defineStore("product", {
             this.error = null
 
             try {
+                const authStore = useAuthStore()
+                const storeId = authStore.user?.store?.id
+
                 const response = await axiosInstance.post(`product/${payload.id}`, {
                     ...payload,
+                    store_id: storeId,
                     _method: 'PUT'
                 })
 

@@ -1,5 +1,5 @@
 <script setup>
-import { formatRupiah } from '@/helpers/format';
+import { formatRupiah, formatDate } from '@/helpers/format';
 import { useProductStore } from '@/stores/product';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
@@ -84,7 +84,7 @@ onMounted(() => {
             <div class="flex items-center justify-between">
                 <p class="flex items-center gap-2 font-semibold text-custom-grey leading-none">
                     <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-6 flex shrink-0" alt="icon">
-                    Created on 19/02/2020
+                    Created on {{ formatDate(product.created_at) }}
                 </p>
             </div>
         </section>
