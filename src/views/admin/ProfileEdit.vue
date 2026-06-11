@@ -167,14 +167,14 @@ const handleSubmit = async () => {
             <div class="flex items-center justify-between">
                 <p class="font-semibold text-custom-grey">Complete Name</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.name }">
-                    <label class="group relative block w-full">
+                    <label class="group relative">
                         <div class="input-icon">
                             <img src="@/assets/images/icons/profile-circle-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         </div>
-                        <p class="input-placeholder" :class="{ 'opacity-0': profile.name }">
+                        <p class="input-placeholder">
                             Enter Your Full Name
                         </p>
-                        <input type="text" class="custom-input w-full" placeholder="" v-model="profile.name">
+                        <input type="text" class="custom-input" placeholder="" v-model="profile.name">
                     </label>
                     <span class="input-error" v-if="error?.name">{{ error?.name?.join(', ') }}</span>
                 </div>
@@ -184,14 +184,14 @@ const handleSubmit = async () => {
             <div class="flex items-center justify-between">
                 <p class="font-semibold text-custom-grey">Email Address</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.email }">
-                    <label class="group relative block w-full">
+                    <label class="group relative">
                         <div class="input-icon">
                             <img src="@/assets/images/icons/sms-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         </div>
-                        <p class="input-placeholder" :class="{ 'opacity-0': profile.email }">
+                        <p class="input-placeholder">
                             Enter Email Address
                         </p>
-                        <input type="email" class="custom-input w-full" placeholder="" v-model="profile.email">
+                        <input type="email" class="custom-input" placeholder="" v-model="profile.email">
                     </label>
                     <span class="input-error" v-if="error?.email">{{ error?.email?.join(', ') }}</span>
                 </div>
@@ -201,14 +201,14 @@ const handleSubmit = async () => {
             <div v-if="user?.role === 'buyer'" class="flex items-center justify-between">
                 <p class="font-semibold text-custom-grey">Phone Number</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.phone_number }">
-                    <label class="group relative block w-full">
+                    <label class="group relative">
                         <div class="input-icon">
                             <img src="@/assets/images/icons/call-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         </div>
-                        <p class="input-placeholder" :class="{ 'opacity-0': profile.phone_number }">
+                        <p class="input-placeholder">
                             Enter Phone Number
                         </p>
-                        <input type="text" class="custom-input w-full" placeholder="" v-model="profile.phone_number">
+                        <input type="text" class="custom-input" placeholder="" v-model="profile.phone_number">
                     </label>
                     <span class="input-error" v-if="error?.phone_number">{{ error?.phone_number?.join(', ') }}</span>
                 </div>
@@ -218,14 +218,14 @@ const handleSubmit = async () => {
             <div v-if="user?.role === 'buyer'" class="flex justify-between">
                 <p class="font-semibold text-custom-grey mt-4">Address Search</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2 relative" :class="{ 'invalid': error?.address_id }">
-                    <label class="group relative block w-full">
+                    <label class="group relative">
                         <div class="input-icon">
                             <img src="@/assets/images/icons/global-search-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         </div>
-                        <p class="input-placeholder" :class="{ 'opacity-0': addressSearch }">
+                        <p class="input-placeholder">
                             Search City/Subdistrict
                         </p>
-                        <input type="text" class="custom-input w-full" placeholder="" v-model="addressSearch" @input="handleAddressInput(addressSearch)">
+                        <input type="text" class="custom-input" placeholder="" v-model="addressSearch" @input="handleAddressInput(addressSearch)">
                     </label>
                     <ul class="search-result absolute left-0 right-0 top-full mt-1 bg-white border border-custom-border rounded-2xl max-h-[200px] overflow-y-auto z-50 shadow-lg" v-if="showAddressOptions">
                         <li v-for="option in addressOptions" :key="option.id" class="p-3 hover:bg-custom-background cursor-pointer text-sm font-semibold border-b border-custom-border/50 last:border-none" @click="handleAddressSelect(option)">
@@ -241,8 +241,19 @@ const handleSubmit = async () => {
             <div v-if="user?.role === 'buyer'" class="flex justify-between">
                 <p class="font-semibold text-custom-grey mt-4">Detailed Address</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.address }">
-                    <label class="group relative block w-full">
-                        <textarea class="custom-input w-full h-[100px] py-4 pl-4 resize-none" placeholder="Enter street name, house number, etc." v-model="profile.address"></textarea>
+                    <label
+                        class="group flex py-4 px-6 rounded-3xl border-[2px] border-custom-border focus-within:border-custom-black transition-300 w-full group-[&.invalid]/errorState:border-custom-red">
+                        <div class="flex h-full pr-4 pt-2 border-r-[1.5px] border-custom-border">
+                            <img src="@/assets/images/icons/location-grey.svg" class="flex size-6 shrink-0" alt="icon">
+                        </div>
+                        <div class="flex flex-col gap-[6px] pl-4 w-full">
+                            <p
+                                class="placeholder font-semibold text-custom-grey text-sm group-has-[textarea:placeholder-shown]:text-base group-has-[textarea:placeholder-shown]:text-custom-black group-has-[textarea:placeholder-shown]:font-bold transition-300">
+                                Enter Your Detailed Address
+                            </p>
+                            <textarea class="appearance-none outline-none w-full font-semibold leading-[160%] resize-none"
+                                rows="3" placeholder=" " v-model="profile.address"></textarea>
+                        </div>
                     </label>
                     <span class="input-error" v-if="error?.address">{{ error?.address?.join(', ') }}</span>
                 </div>
@@ -252,8 +263,8 @@ const handleSubmit = async () => {
             <div v-if="user?.role === 'buyer' && profile.city" class="flex items-center justify-between">
                 <p class="font-semibold text-custom-grey">Selected City & Zip</p>
                 <div class="flex gap-4 w-1/2">
-                    <input type="text" class="custom-input w-2/3 bg-custom-background cursor-not-allowed" readonly :value="profile.city">
-                    <input type="text" class="custom-input w-1/3 bg-custom-background cursor-not-allowed" readonly :value="profile.postal_code">
+                    <input type="text" class="custom-input !pt-[25px] !pb-[25px] w-2/3 bg-custom-background cursor-not-allowed" readonly :value="profile.city">
+                    <input type="text" class="custom-input !pt-[25px] !pb-[25px] w-1/3 bg-custom-background cursor-not-allowed" readonly :value="profile.postal_code">
                 </div>
             </div>
 
@@ -264,14 +275,14 @@ const handleSubmit = async () => {
             <div class="flex items-center justify-between">
                 <p class="font-semibold text-custom-grey">New Password</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.password }">
-                    <label class="group relative block w-full">
+                    <label class="group relative">
                         <div class="input-icon">
                             <img src="@/assets/images/icons/key-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         </div>
-                        <p class="input-placeholder" :class="{ 'opacity-0': profile.password }">
+                        <p class="input-placeholder">
                             Enter New Password
                         </p>
-                        <input type="password" class="custom-input w-full" placeholder="" v-model="profile.password">
+                        <input type="password" class="custom-input" placeholder="" v-model="profile.password">
                     </label>
                     <span class="input-error" v-if="error?.password">{{ error?.password?.join(', ') }}</span>
                 </div>
@@ -281,14 +292,14 @@ const handleSubmit = async () => {
             <div class="flex items-center justify-between">
                 <p class="font-semibold text-custom-grey">Confirm Password</p>
                 <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.password }">
-                    <label class="group relative block w-full">
+                    <label class="group relative">
                         <div class="input-icon">
                             <img src="@/assets/images/icons/key-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         </div>
-                        <p class="input-placeholder" :class="{ 'opacity-0': profile.password_confirmation }">
+                        <p class="input-placeholder">
                             Confirm New Password
                         </p>
-                        <input type="password" class="custom-input w-full" placeholder="" v-model="profile.password_confirmation">
+                        <input type="password" class="custom-input" placeholder="" v-model="profile.password_confirmation">
                     </label>
                 </div>
             </div>
