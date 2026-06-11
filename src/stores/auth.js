@@ -77,6 +77,29 @@ export const useAuthStore = defineStore("auth", {
             }
         },
 
+        async updateProfile(payload) {
+            this.loading = true
+            this.error = null
+            this.success = null
+
+            try {
+                const response = await axiosInstance.post('/profile/update', payload, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
+
+                this.user = response.data.data
+                this.success = response.data.message
+                return response.data.data
+            } catch (error) {
+                this.error = handleError(error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
         async logout() {
             this.loading = true
 

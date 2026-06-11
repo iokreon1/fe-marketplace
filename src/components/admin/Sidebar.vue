@@ -15,6 +15,8 @@ import EmpyWalletGreyIcon from '@/assets/images/icons/empty-wallet-grey.svg'
 import Wallet3BlueFillIcon from '@/assets/images/icons/wallet-3-blue-fill.svg'
 import User2BlackIcon from '@/assets/images/icons/profile-2user-black.svg'
 import User2BlueIcon from '@/assets/images/icons/profile-2user-blue-fill.svg'
+import Setting2GreyIcon from '@/assets/images/icons/setting-2-grey.svg'
+import SettingBlackIcon from '@/assets/images/icons/setting-black.svg'
 import router from '@/router'
 
 const items = [
@@ -126,6 +128,12 @@ const items = [
         iconDefault: User2BlackIcon,
         iconActive: User2BlueIcon,
         permission: 'user-menu'
+    },
+    {
+        label: 'Profile Settings',
+        path: '/admin/profile',
+        iconDefault: Setting2GreyIcon,
+        iconActive: SettingBlackIcon,
     },
 ]
 </script>

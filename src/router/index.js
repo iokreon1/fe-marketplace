@@ -36,6 +36,7 @@ import UserList from '@/views/admin/user/UserList.vue'
 import MyStore from '@/views/admin/store/MyStore.vue'
 import StoreCreate from '@/views/admin/store/StoreCreate.vue'
 import StoreEdit from '@/views/admin/store/StoreEdit.vue'
+import ProfileEdit from '@/views/admin/ProfileEdit.vue'
 import Search from '@/views/app/Search.vue'
 
 const router = createRouter({
@@ -348,6 +349,15 @@ const router = createRouter({
             title: 'User List',
             requiresAuth: true,
             permission: 'user-list'
+          }
+        },
+        {
+          path: 'profile',
+          name: 'admin.profile',
+          component: ProfileEdit,
+          meta: {
+            title: 'Edit Profile',
+            requiresAuth: true
           }
         },
       ]

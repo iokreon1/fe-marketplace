@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
+import PhotoProfileDefault from '@/assets/images/icons/photo-profile-default.svg'
 
 const route = useRoute()
 
@@ -44,17 +45,19 @@ const { logout } = authStore
             </div>
         </div>
         <div class="flex items-center gap-3 h-[102px] bg-white w-fit rounded-3xl p-[18px]">
-            <div class="flex rounded-full overflow-hidden size-14">
-                <img :src="user.profile_picture" class="size-full object-cover" alt="photo">
-            </div>
-            <div class="flex flex-col gap-[6px] min-w-[155px] w-fit">
-                <p class="font-semibold text-lg leading-tight">{{ user?.name }}</p>
-                <p class="flex items-center gap-1 font-semibold text-custom-grey text-lg leading-none">
-                    <img src="@/assets/images/icons/user-grey.svg" class="size-[18px]" alt="icon">
-                    {{ user?.role }}
-                </p>
-            </div>
-            <a @click="logout" class="flex w-6">
+            <RouterLink :to="{ name: 'admin.profile' }" class="flex items-center gap-3 hover:opacity-80 transition-300">
+                <div class="flex rounded-full overflow-hidden size-14 shrink-0">
+                    <img :src="user?.profile_picture || PhotoProfileDefault" class="size-full object-cover" alt="photo">
+                </div>
+                <div class="flex flex-col gap-[6px] min-w-[155px] w-fit">
+                    <p class="font-semibold text-lg leading-tight">{{ user?.name }}</p>
+                    <p class="flex items-center gap-1 font-semibold text-custom-grey text-lg leading-none">
+                        <img src="@/assets/images/icons/user-grey.svg" class="size-[18px]" alt="icon">
+                        {{ user?.role }}
+                    </p>
+                </div>
+            </RouterLink>
+            <a @click="logout" class="flex w-6 cursor-pointer">
                 <img src="@/assets/images/icons/logout.svg" class="flex size-6 shrink-0" alt="icon">
             </a>
         </div>

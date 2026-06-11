@@ -192,6 +192,13 @@ onMounted(() => {
     }
     if (user.value && user.value.buyer) {
         transaction.value.buyer_id = user.value.buyer.id;
+        if (user.value.buyer.address) {
+            transaction.value.address = user.value.buyer.address;
+            transaction.value.address_id = user.value.buyer.address_id;
+            transaction.value.city = user.value.buyer.city;
+            transaction.value.postal_code = user.value.buyer.postal_code;
+            addressSearch.value = user.value.buyer.address;
+        }
     }
 });
 </script>
