@@ -1,5 +1,6 @@
 <script setup>
 import Placeholder from '@/assets/images/icons/gallery-grey.svg'
+import DeliveringPlaceholder from '@/assets/images/thumbnails/delivering.svg'
 import Alert from '@/components/admin/Alert.vue';
 import { formatRupiah, formatToClientTimezone } from '@/helpers/format';
 import { useTransactionStore } from '@/stores/transaction';
@@ -8,6 +9,8 @@ import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import StarActive from '@/assets/images/icons/Star-pointy.svg'
+import StarOutline from '@/assets/images/icons/Star-pointy-outline.svg'
 
 const route = useRoute()
 
@@ -21,11 +24,86 @@ const { fetchTransactionById, updateTransaction } = transactionStore
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
 
+const reviewsData = ref({})
+
+const isProductReviewed = (productId) => {
+    if (!transaction.value?.product_reviews) return false
+    return transaction.value.product_reviews.some(r => r.product_id === productId)
+}
+
+const getProductReview = (productId) => {
+    if (!transaction.value?.product_reviews) return null
+    return transaction.value.product_reviews.find(r => r.product_id === productId)
+}
+
+const triggerPhotoInput = (productId) => {
+    document.getElementById(`photo-input-${productId}`).click()
+}
+
+const handlePhotoChange = (e, productId) => {
+    const file = e.target.files[0]
+    if (!file) return;
+
+    if (reviewsData.value[productId]) {
+        reviewsData.value[productId].photo = file
+        reviewsData.value[productId].photoPreview = URL.createObjectURL(file)
+    }
+}
+
+const removePhoto = (productId) => {
+    if (reviewsData.value[productId]) {
+        reviewsData.value[productId].photo = null
+        if (reviewsData.value[productId].photoPreview) {
+            URL.revokeObjectURL(reviewsData.value[productId].photoPreview)
+            reviewsData.value[productId].photoPreview = null
+        }
+        // Clear input element
+        const input = document.getElementById(`photo-input-${productId}`)
+        if (input) input.value = ''
+    }
+}
+
+const submitReview = async (productId) => {
+    const data = reviewsData.value[productId]
+    if (!data) return;
+
+    try {
+        const formData = new FormData()
+        formData.append('transaction_id', transaction.value.id)
+        formData.append('product_id', productId)
+        formData.append('rating', data.rating)
+        formData.append('review', data.review || '')
+        
+        if (data.photo) {
+            formData.append('photo', data.photo)
+        }
+
+        await transactionStore.createProductReview(formData)
+        fetchData()
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 const fetchData = async () => {
     const response = await fetchTransactionById(route.params.id)
 
     transaction.value = response
     transaction.value.delivery_proof_url = Placeholder
+
+    if (response && response.transaction_details) {
+        response.transaction_details.forEach(detail => {
+            const prodId = detail.product?.id
+            if (prodId && !reviewsData.value[prodId]) {
+                reviewsData.value[prodId] = {
+                    rating: 5,
+                    review: '',
+                    photo: null,
+                    photoPreview: null
+                }
+            }
+        })
+    }
 }
 
 const handleUpdateData = async (updatePayload) => {
@@ -218,6 +296,66 @@ onMounted(fetchData)
                                 Subtotal
                             </p>
                             <p class="font-bold text-lg text-custom-blue">Rp {{ formatRupiah(product.subtotal) }}</p>
+                        </div>
+
+                        <!-- Review Section for Completed Transaction -->
+                        <div v-if="transaction.delivery_status === 'completed'" class="w-full">
+                            <hr class="border-custom-stroke my-3">
+                            
+                            <!-- 1. Buyer: Form to Write Review -->
+                             <div v-if="user?.role === 'buyer' && !isProductReviewed(product.product.id)" class="p-4 rounded-xl bg-custom-background border border-custom-stroke flex flex-col gap-3">
+                                 <p class="font-bold text-sm text-custom-black text-left">Beri Ulasan Produk Ini</p>
+                                 <div class="flex items-center gap-2">
+                                     <span class="font-semibold text-xs text-custom-grey">Rating:</span>
+                                     <div class="flex gap-1">
+                                         <button v-for="n in 5" :key="n" @click="reviewsData[product.product.id] ? (reviewsData[product.product.id].rating = n) : null" type="button" class="focus:outline-none">
+                                             <img :src="reviewsData[product.product.id] && n <= reviewsData[product.product.id].rating ? StarActive : StarOutline" class="size-6" alt="star">
+                                         </button>
+                                     </div>
+                                 </div>
+                                 <div class="flex flex-col gap-1 text-left">
+                                     <span class="font-semibold text-xs text-custom-grey">Ulasan:</span>
+                                     <textarea v-model="reviewsData[product.product.id].review" rows="2" class="w-full rounded-lg border border-custom-stroke p-2 text-sm focus:outline-none focus:border-custom-blue" placeholder="Bagikan pendapat Anda tentang produk ini..."></textarea>
+                                 </div>
+                                 <div class="flex flex-col gap-1.5 text-left">
+                                     <span class="font-semibold text-xs text-custom-grey">Foto Produk (Opsional):</span>
+                                     <div class="flex items-center gap-3">
+                                         <input type="file" :id="'photo-input-' + product.product.id" accept="image/*" class="hidden" @change="(e) => handlePhotoChange(e, product.product.id)">
+                                         <button type="button" @click="triggerPhotoInput(product.product.id)" class="flex items-center gap-2 rounded-xl border border-dashed border-custom-stroke p-3 text-xs font-semibold text-custom-grey hover:bg-gray-50 transition-300">
+                                             <img src="@/assets/images/icons/gallery-add-photo.svg" class="size-5" alt="icon">
+                                             <span>Pilih Foto</span>
+                                         </button>
+                                         <div v-if="reviewsData[product.product.id]?.photoPreview" class="relative size-14 rounded-xl overflow-hidden border border-custom-stroke bg-white">
+                                             <img :src="reviewsData[product.product.id].photoPreview" class="size-full object-cover" alt="preview">
+                                             <button type="button" @click="removePhoto(product.product.id)" class="absolute top-0 right-0 p-0.5 bg-custom-red/80 hover:bg-custom-red text-white rounded-bl-lg transition-300">
+                                                 <img src="@/assets/images/icons/trash-white.svg" class="size-3.5" alt="trash">
+                                             </button>
+                                         </div>
+                                     </div>
+                                 </div>
+                                 <button @click="submitReview(product.product.id)" class="w-full sm:w-fit self-end rounded-full px-6 py-3 bg-custom-blue text-white text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-300">
+                                     Kirim Ulasan
+                                 </button>
+                             </div>
+                             
+                             <!-- 2. Buyer/Seller/Admin: Display Existing Review -->
+                             <div v-else-if="isProductReviewed(product.product.id)" class="p-4 rounded-xl bg-custom-background border border-custom-stroke flex flex-col gap-2 text-left">
+                                 <div class="flex items-center justify-between">
+                                     <span class="font-bold text-sm text-custom-black">Ulasan Produk</span>
+                                     <div class="flex gap-0.5">
+                                         <img v-for="n in 5" :key="n" :src="n <= getProductReview(product.product.id).rating ? StarActive : StarOutline" class="size-5" alt="star">
+                                     </div>
+                                 </div>
+                                 <p class="text-sm text-custom-grey italic">“{{ getProductReview(product.product.id).review || 'Tidak ada ulasan tertulis.' }}”</p>
+                                 <div v-if="getProductReview(product.product.id)?.photo" class="mt-2 w-32 h-32 rounded-xl overflow-hidden border border-custom-stroke bg-white">
+                                     <img :src="getProductReview(product.product.id).photo" class="size-full object-cover" alt="review photo">
+                                 </div>
+                             </div>
+                            
+                            <!-- 3. Seller/Admin: Show "No Review" yet -->
+                            <div v-else class="p-4 rounded-xl bg-custom-background border border-custom-stroke text-center text-custom-grey text-xs">
+                                Ulasan belum ditulis oleh pembeli.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -516,7 +654,7 @@ onMounted(fetchData)
                     </div>
                 </div>
                 <div class="h-[260px] w-full rounded-2xl overflow-hidden bg-custom-background">
-                    <img :src="transaction.delivery_proof" class="size-full object-cover" alt="thumbnail">
+                    <img :src="transaction.delivery_proof || DeliveringPlaceholder" class="size-full object-cover" alt="thumbnail">
                 </div>
                 <div class="flex items-center justify-between">
                     <p class="flex items-center gap-1 font-medium text-custom-grey leading-none">
@@ -574,7 +712,7 @@ onMounted(fetchData)
                     </div>
                 </div>
                 <div class="h-[260px] w-full rounded-2xl overflow-hidden bg-custom-background">
-                    <img src="@/assets/images/thumbnails/delivering.svg" class="size-full object-cover" alt="thumbnail">
+                    <img :src="transaction.delivery_proof || DeliveringPlaceholder" class="size-full object-cover" alt="thumbnail">
                 </div>
                 <div class="flex items-center justify-between">
                     <p class="flex items-center gap-1 font-medium text-custom-grey leading-none">
@@ -596,28 +734,44 @@ onMounted(fetchData)
             </section>
             <section class="flex flex-col w-full rounded-[20px] p-5 gap-5 bg-white">
                 <p class="font-bold text-xl">Customer Reviews</p>
-                <div class="flex flex-col rounded-2xl border border-custom-stroke p-4 gap-4">
-                    <div class="flex items-center justify-between">
-                        <p class="font-bold tracking-tight text-xl leading-none">
-                            <span class="text-[32px]">4.0</span>/5.0
-                        </p>
-                        <div class="flex">
-                            <img src="@/assets/images/icons/Star-pointy.svg" class="flex size-8 shrink-0 p-0.5"
-                                alt="star">
-                            <img src="@/assets/images/icons/Star-pointy.svg" class="flex size-8 shrink-0 p-0.5"
-                                alt="star">
-                            <img src="@/assets/images/icons/Star-pointy.svg" class="flex size-8 shrink-0 p-0.5"
-                                alt="star">
-                            <img src="@/assets/images/icons/Star-pointy.svg" class="flex size-8 shrink-0 p-0.5"
-                                alt="star">
-                            <img src="@/assets/images/icons/Star-pointy-outline.svg" class="flex size-8 shrink-0 p-0.5"
-                                alt="star">
+                <div class="flex flex-col gap-4" v-if="transaction.product_reviews && transaction.product_reviews.length > 0">
+                    <div class="flex flex-col rounded-2xl border border-custom-stroke p-4 gap-4"
+                         v-for="review in transaction.product_reviews" :key="review.id">
+                        <div class="flex items-center justify-between">
+                            <!-- Buyer Profile Info -->
+                            <div class="flex items-center gap-3">
+                                <div class="flex size-12 shrink-0 rounded-full bg-custom-background overflow-hidden border border-custom-stroke">
+                                    <img :src="transaction.buyer?.user?.profile_picture" class="size-full object-cover" alt="avatar">
+                                </div>
+                                <div class="flex flex-col text-left">
+                                    <p class="font-bold text-sm text-custom-black">{{ transaction.buyer?.user?.name }}</p>
+                                    <p class="text-xs text-custom-grey">{{ formatToClientTimezone(review.created_at) || 'Pembeli' }}</p>
+                                </div>
+                            </div>
+                            <!-- Rating -->
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-bold text-lg text-custom-black">{{ review.rating }}.0</span>
+                                <div class="flex">
+                                    <img v-for="n in 5" :key="n"
+                                         :src="n <= review.rating ? StarActive : StarOutline" 
+                                         class="flex size-6 shrink-0 p-0.5"
+                                         alt="star">
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="border-custom-stroke">
+                        <div class="flex flex-col gap-1 text-left">
+                            <p class="font-semibold text-xs text-custom-blue uppercase tracking-wider">{{ review.product?.name }}</p>
+                            <p class="font-medium text-lg text-custom-grey">“{{ review.review || 'Tidak ada ulasan tertulis.' }}”</p>
+                            <div v-if="review.photo" class="mt-3 w-40 h-40 rounded-2xl overflow-hidden border border-custom-stroke bg-white">
+                                <img :src="review.photo" class="size-full object-cover" alt="review photo">
+                            </div>
                         </div>
                     </div>
-                    <hr class="border-custom-stroke">
-                    <p class="font-medium text-lg text-custom-grey">“The iPhone is super fast, the MacBook
-                        is perfect for work, and the AirPods sound crystal clear. Plus, the store's service
-                        was amazing—fast delivery and great support!”</p>
+                </div>
+                <div class="flex flex-col items-center justify-center p-5 text-center text-custom-grey" v-else>
+                    <img src="@/assets/images/icons/note-remove-grey.svg" class="size-10 mb-2 opacity-50" alt="icon">
+                    <p class="font-semibold text-sm">Belum ada ulasan dari pembeli</p>
                 </div>
             </section>
         </div>

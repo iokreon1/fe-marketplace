@@ -18,27 +18,34 @@ const serverOptions = ref({
 })
 
 const filters = ref({
-    search: null
+    search: ''
 })
 
-const fetchData = async () => {
+const fetchData = async (resetPage = false) => {
+    if (resetPage) {
+        serverOptions.value.page = 1
+    }
     await fetchTransactionsPaginated({
         ...serverOptions.value,
         ...filters.value
     })
 }
 
-const debounceFetchData = debounce(fetchData, 500)
+const debounceFetchData = debounce(() => fetchData(true), 500)
 
-onMounted(fetchData)
+onMounted(() => fetchData(false))
 
-watch(serverOptions, () => {
-    fetchData()
-}, { deep: true })
+watch(() => serverOptions.value.page, () => {
+    fetchData(false)
+})
 
-watch(filters, () => {
+watch(() => serverOptions.value.row_per_page, () => {
+    fetchData(true)
+})
+
+watch(() => filters.value.search, () => {
     debounceFetchData()
-}, { deep: true })
+})
 </script>
 
 <template>
@@ -48,16 +55,16 @@ watch(filters, () => {
                 <p class="font-bold text-xl">All Transactions</p>
                 <div class="flex items-center gap-1">
                     <img src="@/assets/images/icons/stickynote-grey.svg" class="flex size-6 shrink-0" alt="icon">
-                    <p class="font-semibold text-custom-grey">4 Total Transactions</p>
+                    <p class="font-semibold text-custom-grey">{{ meta?.total ?? 0 }} Total Transactions</p>
                 </div>
             </div>
         </div>
         <div id="Filter" class="flex items-center justify-between">
-            <form action="#">
+            <form action="#" @submit.prevent>
                 <label
                     class="flex items-center w-[370px] h-14 rounded-2xl p-4 gap-2 bg-white border border-custom-stroke focus-within:border-custom-black transition-300">
                     <img src="@/assets/images/icons/receipt-search-grey.svg" class="flex size-6 shrink-0" alt="icon">
-                    <input type="text"
+                    <input type="text" v-model="filters.search"
                         class="appearance-none w-full placeholder:text-custom-grey font-medium focus:outline-none"
                         placeholder="Search Transaction">
                 </label>
@@ -66,20 +73,22 @@ watch(filters, () => {
                 <p class="font-medium text-custom-grey">Show</p>
                 <label
                     class="flex items-center h-14 rounded-2xl border border-custom-stroke py-4 px-5 pl-3 bg-white focus-within:border-custom-black transition-300">
-                    <select name="" id="" class="text-custom-black font-medium appearance-none focus:outline-none p-2">
-                        <option value="" class="font-medium" selected>4 Entries</option>
-                        <option value="" class="font-medium">10 Entries</option>
-                        <option value="" class="font-medium">20 Entries</option>
-                        <option value="" class="font-medium">40 Entries</option>
+                    <select v-model="serverOptions.row_per_page" class="text-custom-black font-medium appearance-none focus:outline-none p-2 bg-transparent cursor-pointer">
+                        <option :value="1" class="font-medium">1 Entries</option>
+                        <option :value="2" class="font-medium">2 Entries</option>
+                        <option :value="4" class="font-medium">4 Entries</option>
+                        <option :value="10" class="font-medium">10 Entries</option>
+                        <option :value="20" class="font-medium">20 Entries</option>
+                        <option :value="40" class="font-medium">40 Entries</option>
                     </select>
                     <img src="@/assets/images/icons/arrow-down-black.svg" class="flex size-6 shrink-0 -ml-1" alt="icon">
                 </label>
             </div>
         </div>
-        <section id="List-Transactions" class="flex flex-col flex-1 gap-6 w-full">
+        <section id="List-Transactions" class="flex flex-col flex-1 gap-6 w-full" v-if="transactions && transactions.length > 0">
             <div class="list flex flex-col gap-5">
                 <div class="card flex flex-col rounded-[20px] border border-custom-stroke py-[18px] px-5 gap-5 bg-white"
-                    v-for="transaction in transactions">
+                    v-for="transaction in transactions" :key="transaction.id">
                     <div class="flex items-center justify-between">
                         <p class="flex items-center gap-2 font-semibold text-custom-grey leading-none">
                             <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-6 flex shrink-0"
@@ -103,7 +112,7 @@ watch(filters, () => {
                                 </p>
                                 <p class="flex items-center gap-1 font-semibold text-custom-grey leading-none">
                                     <img src="@/assets/images/icons/calendar-2-grey.svg" class="size-5" alt="icon">
-                                    21 Mei 2025
+                                    {{ formatToClientTimezone(transaction.created_at) }}
                                 </p>
                             </div>
                         </div>
@@ -158,59 +167,10 @@ watch(filters, () => {
                         </div>
                     </div>
                 </div>
-
             </div>
-            <nav id="Pagination">
-                <ul class="flex items-center gap-3">
-                    <li class="group">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold"
-                            disabled>
-                            <img src="@/assets/images/icons/arrow-right-no-tail-blue.svg"
-                                class="size-6 group-has-[:disabled]:opacity-20 rotate-180" alt="icon">
-                        </button>
-                    </li>
-                    <li class="group active">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold">
-                            1
-                        </button>
-                    </li>
-                    <li class="group">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold">
-                            2
-                        </button>
-                    </li>
-                    <li class="group">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold">
-                            3
-                        </button>
-                    </li>
-                    <li class="group">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold">
-                            4
-                        </button>
-                    </li>
-                    <li class="group">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold">
-                            5
-                        </button>
-                    </li>
-                    <li class="group">
-                        <button
-                            class="flex size-11 shrink-0 rounded-full items-center justify-center bg-custom-blue/10 text-custom-blue group-[&.active]:bg-custom-blue group-[&.active]:text-white font-semibold">
-                            <img src="@/assets/images/icons/arrow-right-no-tail-blue.svg"
-                                class="size-6 group-has-[:disabled]:opacity-20" alt="icon">
-                        </button>
-                    </li>
-                </ul>
-            </nav>
+            <Pagination v-if="meta && meta.last_page > 1" :meta="meta" :server-options="serverOptions" />
         </section>
-        <div id="Empty-State" class="hidden flex flex-col flex-1 items-center justify-center gap-4">
+        <div id="Empty-State" class="flex flex-col flex-1 items-center justify-center gap-4 py-10" v-else>
             <img src="@/assets/images/icons/note-remove-grey.svg" class="size-[52px]" alt="icon">
             <div class="flex flex-col gap-1 items-center text-center">
                 <p class="font-semibold text-custom-grey">Oops, you don't have any data yet</p>

@@ -27,7 +27,16 @@ export function formatDateTime(date) {
 
 export function formatToClientTimezone(date) {
     if (!date) return '';
-    const originalDate = DateTime.fromISO(date, { zone: 'utc' });
+    let originalDate = DateTime.fromISO(date, { zone: 'utc' });
+    if (!originalDate.isValid) {
+        originalDate = DateTime.fromSQL(date, { zone: 'utc' });
+    }
+    if (!originalDate.isValid) {
+        const parsed = new Date(date);
+        if (!isNaN(parsed.getTime())) {
+            originalDate = DateTime.fromJSDate(parsed, { zone: 'utc' });
+        }
+    }
     if (!originalDate.isValid) return '';
 
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

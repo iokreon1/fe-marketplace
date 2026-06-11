@@ -20,7 +20,10 @@ const filters = ref({
     search: null
 })
 
-const fetchData = async () => {
+const fetchData = async (resetPage = false) => {
+    if (resetPage) {
+        serverOptions.value.page = 1
+    }
     await fetchTransactionsPaginated({
         ...serverOptions.value,
         ...filters.value
@@ -29,21 +32,24 @@ const fetchData = async () => {
 
 async function handleDelete(id) {
     await deleteTransaction(id)
-
-    fetchData()
+    fetchData(false)
 }
 
-const debounceFetchData = debounce(fetchData, 500)
+const debounceFetchData = debounce(() => fetchData(true), 500)
 
-onMounted(fetchData)
+onMounted(() => fetchData(false))
 
-watch(serverOptions, () => {
-    fetchData()
-}, { deep: true })
+watch(() => serverOptions.value.page, () => {
+    fetchData(false)
+})
 
-watch(filters, () => {
+watch(() => serverOptions.value.row_per_page, () => {
+    fetchData(true)
+})
+
+watch(() => filters.value.search, () => {
     debounceFetchData()
-}, { deep: true })
+})
 </script>
 
 <template>
@@ -53,7 +59,7 @@ watch(filters, () => {
                 <p class="font-bold text-xl">All Transactions</p>
                 <div class="flex items-center gap-1">
                     <img src="@/assets/images/icons/stickynote-grey.svg" class="flex size-6 shrink-0" alt="icon">
-                    <p class="font-semibold text-custom-grey">4 Total Transactions</p>
+                    <p class="font-semibold text-custom-grey">{{ meta?.total ?? 0 }} Total Transactions</p>
                 </div>
             </div>
         </div>
@@ -71,11 +77,14 @@ watch(filters, () => {
                 <p class="font-medium text-custom-grey">Show</p>
                 <label
                     class="flex items-center h-14 rounded-2xl border border-custom-stroke py-4 px-5 pl-3 bg-white focus-within:border-custom-black transition-300">
-                    <select name="" id="" class="text-custom-black font-medium appearance-none focus:outline-none p-2"
+                    <select class="text-custom-black font-medium appearance-none focus:outline-none p-2 bg-transparent cursor-pointer"
                         v-model="serverOptions.row_per_page">
-                        <option value="10" class="font-medium">10 Entries</option>
-                        <option value="20" class="font-medium">20 Entries</option>
-                        <option value="40" class="font-medium">40 Entries</option>
+                        <option :value="1" class="font-medium">1 Entries</option>
+                        <option :value="2" class="font-medium">2 Entries</option>
+                        <option :value="4" class="font-medium">4 Entries</option>
+                        <option :value="10" class="font-medium">10 Entries</option>
+                        <option :value="20" class="font-medium">20 Entries</option>
+                        <option :value="40" class="font-medium">40 Entries</option>
                     </select>
                     <img src="@/assets/images/icons/arrow-down-black.svg" class="flex size-6 shrink-0 -ml-1" alt="icon">
                 </label>

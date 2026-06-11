@@ -1,10 +1,13 @@
 <script setup>
 import ProductCard from '@/components/card/ProductCard.vue';
-import { formatRupiah } from '@/helpers/format';
+import { formatRupiah, formatToClientTimezone } from '@/helpers/format';
+import StarActive from '@/assets/images/icons/Star-pointy.svg'
+import StarOutline from '@/assets/images/icons/Star-pointy-outline.svg'
+import PhotoProfileDefault from '@/assets/images/icons/photo-profile-default.svg'
 import { useProductStore } from '@/stores/product';
 import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { watch } from 'vue';
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -21,6 +24,33 @@ const { fetchProductBySlug, fetchProducts } = productStore
 
 const cart = useCartStore()
 const quantity = ref(1)
+
+const currentPage = ref(1)
+const reviewsPerPage = 4
+
+const paginatedReviews = computed(() => {
+    if (!product.value?.product_reviews) return []
+    const start = (currentPage.value - 1) * reviewsPerPage
+    const end = start + reviewsPerPage
+    return product.value.product_reviews.slice(start, end)
+})
+
+const totalPages = computed(() => {
+    if (!product.value?.product_reviews) return 0
+    return Math.ceil(product.value.product_reviews.length / reviewsPerPage)
+})
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--
+    }
+}
+
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++
+    }
+}
 
 const fetchProduct = async () => {
     const response = await fetchProductBySlug(route.params.slug)
@@ -73,6 +103,7 @@ onMounted(() => {
 watch(
     () => route.params.slug,
     () => {
+        currentPage.value = 1
         fetchProduct()
         fetchProducts({
             limit: 4,
@@ -170,63 +201,48 @@ watch(
                     </a>
                 </div>
                 <div id="Testimony" class="flex flex-col gap-6">
-                    <p class="font-bold text-lg">Product About</p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col w-full rounded-[20px] border border-custom-stroke p-5 gap-4">
+                    <p class="font-bold text-lg">Product Reviews</p>
+                    <div class="grid grid-cols-2 gap-4" v-if="paginatedReviews && paginatedReviews.length > 0">
+                        <div class="flex flex-col w-full rounded-[20px] border border-custom-stroke p-5 gap-4"
+                             v-for="review in paginatedReviews" :key="review.id">
                             <div class="flex items-center gap-[10px]">
-                                <div class="flex size-16 rounded-full overflow-hidden bg-custom-background">
-                                    <img src="@/assets/images/photos/photo-6.png" class="size-full object-cover"
-                                        alt="photo">
+                                <div class="flex size-16 rounded-full overflow-hidden bg-custom-background border border-custom-stroke shrink-0">
+                                    <img :src="review.buyer?.profile_picture || PhotoProfileDefault" class="size-full object-cover"
+                                        alt="photo" @error="(e) => e.target.src = PhotoProfileDefault">
                                 </div>
-                                <div class="flex flex-col items-center gap-[6px]">
-                                    <p class="font-bold text-lg">Bryan Utami</p>
-                                    <p class="font-medium text-custom-grey">3 Days Ago</p>
+                                <div class="flex flex-col items-start gap-[2px]">
+                                    <p class="font-bold text-lg leading-tight">{{ review.buyer?.name || 'Pembeli' }}</p>
+                                    <p class="font-medium text-sm text-custom-grey">{{ formatToClientTimezone(review.created_at) }}</p>
                                 </div>
                             </div>
-                            <p class="font-semibold">“The MacBook is perfect for work, and the AirPods sound crystal
-                                clear. Plus, the store's service was amazing—fast delivery and great support!”</p>
+                            <p class="font-semibold text-left">“{{ review.review || 'Tidak ada ulasan tertulis.' }}”</p>
                             <div class="flex items-center gap-0.5">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
+                                <img v-for="n in 5" :key="n"
+                                     :src="n <= review.rating ? StarActive : StarOutline" 
+                                     class="size-[22px] p-0.5" 
+                                     alt="star">
                             </div>
-                        </div>
-                        <div class="flex flex-col w-full rounded-[20px] border border-custom-stroke p-5 gap-4">
-                            <div class="flex items-center gap-[10px]">
-                                <div class="flex size-16 rounded-full overflow-hidden bg-custom-background">
-                                    <img src="@/assets/images/photos/photo-4.png" class="size-full object-cover"
-                                        alt="photo">
-                                </div>
-                                <div class="flex flex-col items-center gap-[6px]">
-                                    <p class="font-bold text-lg">Kintan Saff</p>
-                                    <p class="font-medium text-custom-grey">1 Days Ago</p>
-                                </div>
-                            </div>
-                            <p class="font-semibold">“The MacBook is perfect for work, and the AirPods sound crystal
-                                clear. Plus, the store's service was amazing—fast delivery and great support!”</p>
-                            <div class="flex items-center gap-0.5">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
-                                <img src="@/assets/images/icons/Star-rounded.svg" class="size-[22px] p-0.5" alt="star">
+                            <div v-if="review.photo" class="mt-2 w-32 h-32 rounded-2xl overflow-hidden border border-custom-stroke bg-white shrink-0">
+                                <img :src="review.photo" class="size-full object-cover" alt="review photo">
                             </div>
                         </div>
                     </div>
-                    <div id="Pagination" class="flex items-center gap-6">
-                        <button
-                            class="flex items-center justify-center size-14 rounded-full border border-custom-stroke">
+                    <div class="flex flex-col items-center justify-center p-8 text-center text-custom-grey border border-custom-stroke rounded-[20px]" v-else>
+                        <img src="@/assets/images/icons/note-remove-grey.svg" class="size-12 mb-2 opacity-50" alt="icon">
+                        <p class="font-semibold text-sm">Belum ada ulasan untuk produk ini</p>
+                    </div>
+                    <div id="Pagination" class="flex items-center gap-6" v-if="totalPages > 1">
+                        <button @click="prevPage" :disabled="currentPage === 1"
+                            class="flex items-center justify-center size-14 rounded-full border border-custom-stroke disabled:opacity-40 disabled:cursor-not-allowed">
                             <img src="@/assets/images/icons/arrow-right-black.svg" class="size-6 rotate-180" alt="icon">
                         </button>
                         <div class="flex items-center gap-2">
-                            <button class="w-[42px] h-1 rounded-full bg-custom-blue"></button>
-                            <button class="w-[42px] h-1 rounded-full bg-custom-stroke"></button>
-                            <button class="w-[42px] h-1 rounded-full bg-custom-stroke"></button>
+                            <button v-for="page in totalPages" :key="page" @click="currentPage = page"
+                                class="w-[42px] h-1 rounded-full transition-300"
+                                :class="page === currentPage ? 'bg-custom-blue' : 'bg-custom-stroke'"></button>
                         </div>
-                        <button
-                            class="flex items-center justify-center size-14 rounded-full border border-custom-stroke">
+                        <button @click="nextPage" :disabled="currentPage === totalPages"
+                            class="flex items-center justify-center size-14 rounded-full border border-custom-stroke disabled:opacity-40 disabled:cursor-not-allowed">
                             <img src="@/assets/images/icons/arrow-right-black.svg" class="size-6" alt="icon">
                         </button>
                     </div>

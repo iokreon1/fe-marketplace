@@ -113,5 +113,23 @@ export const useTransactionStore = defineStore("transaction", {
                 this.loading = false
             }
         },
+
+        async createProductReview(payload) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const response = await axiosInstance.post(`product-review`, payload)
+
+                this.success = response.data.message
+
+                return response.data.data
+            } catch (error) {
+                this.error = handleError(error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
     }
 })
