@@ -111,9 +111,9 @@ onMounted(async () => {
                         </p>
                     </div>
                 </div>
-                <div class="flex gap-4">
+                <div class="flex gap-2 w-full">
                     <button
-                        class="flex items-center justify-center h-16 w-full rounded-2xl p-4 px-6 gap-2 bg-custom-blue">
+                        class="flex items-center justify-center h-16 w-1/3 rounded-2xl p-4 px-6 gap-2 bg-custom-blue">
                         <span class="font-bold text-white">Follow Store</span>
                         <img src="@/assets/images/icons/shop-add-white.svg" class="flex size-6 shrink-0" alt="icon">
                     </button>
@@ -124,14 +124,6 @@ onMounted(async () => {
                     </a>
                 </div>
             </div>
-            <a href="#" class="flex w-[253px] shrink-0 overflow-hidden">
-                <img src="@/assets/images/thumbnails/promo-potrait-1-small.png" class="size-full object-contain"
-                    alt="promo">
-            </a>
-            <a href="#" class="flex w-[253px] shrink-0 overflow-hidden">
-                <img src="@/assets/images/thumbnails/promo-potrait-2-small.png" class="size-full object-contain"
-                    alt="promo">
-            </a>
         </section>
         <section class="flex flex-col gap-8">
             <div id="Tab-Buttons" class="flex items-center gap-[38px] w-full pb-3 border-b border-custom-stroke">

@@ -38,6 +38,8 @@ import StoreCreate from '@/views/admin/store/StoreCreate.vue'
 import StoreEdit from '@/views/admin/store/StoreEdit.vue'
 import ProfileEdit from '@/views/admin/ProfileEdit.vue'
 import Search from '@/views/app/Search.vue'
+import CategoriesAll from '@/views/app/CategoriesAll.vue'
+import StoresAll from '@/views/app/StoresAll.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -81,6 +83,16 @@ const router = createRouter({
           path: 'search',
           name: 'app.search',
           component: Search
+        },
+        {
+          path: 'categories',
+          name: 'app.categories',
+          component: CategoriesAll
+        },
+        {
+          path: 'stores',
+          name: 'app.stores',
+          component: StoresAll
         },
         {
           path: 'product/:slug',

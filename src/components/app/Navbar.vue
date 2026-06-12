@@ -10,7 +10,7 @@ const showDropdownCategories = ref(false)
 const searchQuery = ref('')
 
 const authStore = useAuthStore()
-const { user } = storeToRefs(authStore)
+const { user, token } = storeToRefs(authStore)
 const { checkAuth, logout } = authStore
 
 const productCategoryStore = useProductCategoryStore()
@@ -109,9 +109,12 @@ onUnmounted(() => {
                             </div>
                         </RouterLink>
                         <RouterLink :to="{ name: 'auth.login' }"
-                            class="flex shrink-0 h-14 rounded-[18px] py-4 px-8 bg-custom-blue" v-if="!user">
+                            class="flex shrink-0 h-14 rounded-[18px] py-4 px-8 bg-custom-blue" v-if="!user && !token">
                             <p class="font-medium text-white">Sign In/Register</p>
                         </RouterLink>
+                        <div v-else-if="!user && token" class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden animate-pulse">
+                            <div class="size-full bg-neutral-200"></div>
+                        </div>
                         <div class="relative" v-if="user">
                             <button id="Profile-Button" @click="showDropdownProfile = !showDropdownProfile"
                                 class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden">
@@ -123,7 +126,7 @@ onUnmounted(() => {
                                     class="flex flex-col w-[201px] rounded-[20px] rounded-tr-none py-6 px-4 gap-[18px] bg-white shadow-[0px_6px_30px_0px_#00000017]">
                                     <RouterLink :to="{ name: 'admin.dashboard' }"
                                         class="flex w-full items-center justify-between">
-                                        <span class="font-medium text-custom-grey">My Profile</span>
+                                        <span class="font-medium text-custom-grey">Dashboard</span>
                                         <img src="@/assets/images/icons/profile-circle-grey.svg"
                                             class="flex size-6 shrink-0" alt="icon">
                                     </RouterLink>

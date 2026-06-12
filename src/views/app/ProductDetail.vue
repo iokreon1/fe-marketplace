@@ -4,8 +4,11 @@ import { formatRupiah, formatToClientTimezone } from '@/helpers/format';
 import StarActive from '@/assets/images/icons/Star-pointy.svg'
 import StarOutline from '@/assets/images/icons/Star-pointy-outline.svg'
 import PhotoProfileDefault from '@/assets/images/icons/photo-profile-default.svg'
+import heartGreyIcon from '@/assets/images/icons/heart-grey.svg'
+import heartRedIcon from '@/assets/images/icons/heart-red.svg'
 import { useProductStore } from '@/stores/product';
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia';
 import { ref, computed } from 'vue';
 import { watch } from 'vue';
@@ -23,7 +26,16 @@ const { products, loading } = storeToRefs(productStore)
 const { fetchProductBySlug, fetchProducts } = productStore
 
 const cart = useCartStore()
+const authStore = useAuthStore()
 const quantity = ref(1)
+
+const checkUserAuth = () => {
+    if (!authStore.token) {
+        router.push({ name: 'auth.login' })
+        return false
+    }
+    return true
+}
 
 const currentPage = ref(1)
 const reviewsPerPage = 4
@@ -84,12 +96,60 @@ const decrease = () => {
     }
 }
 
+const showSuccessToast = ref(false)
+const toastMessage = ref('')
+
 const addToCart = () => {
+    if (!checkUserAuth()) return
+    if (!product.value) return
     cart.addToCart({
         ...product.value,
         quantity: quantity.value
     })
-    router.push({ name: 'app.cart' })
+    toastMessage.value = `"${product.value.name}" telah ditambahkan ke keranjang belanja!`
+    showSuccessToast.value = true
+    setTimeout(() => {
+        showSuccessToast.value = false
+    }, 3000)
+}
+
+const buyNow = () => {
+    if (!checkUserAuth()) return
+    if (!product.value || !product.value.store) return
+    cart.addToCart({
+        ...product.value,
+        quantity: quantity.value
+    })
+    cart.selectedStores.clear()
+    cart.selectedStores.add(product.value.store.id)
+    cart.saveSelectedStores()
+    router.push({ name: 'app.checkout' })
+}
+
+const wishlist = ref(JSON.parse(localStorage.getItem('wishlist')) || [])
+
+const isFavorited = computed(() => {
+    return product.value && wishlist.value.includes(product.value.id)
+})
+
+const toggleFavorite = () => {
+    if (!checkUserAuth()) return
+    if (!product.value) return
+    
+    const index = wishlist.value.indexOf(product.value.id)
+    if (index === -1) {
+        wishlist.value.push(product.value.id)
+        toastMessage.value = `"${product.value.name}" telah ditambahkan ke daftar Wishlist!`
+    } else {
+        wishlist.value.splice(index, 1)
+        toastMessage.value = `"${product.value.name}" dihapus dari daftar Wishlist!`
+    }
+    localStorage.setItem('wishlist', JSON.stringify(wishlist.value))
+    
+    showSuccessToast.value = true
+    setTimeout(() => {
+        showSuccessToast.value = false
+    }, 3000)
 }
 
 onMounted(() => {
@@ -114,6 +174,29 @@ watch(
 </script>
 
 <template>
+    <!-- Success Toast Notification -->
+    <Transition
+        enter-active-class="transition ease-out duration-300"
+        enter-from-class="transform -translate-y-4 opacity-0 scale-95"
+        enter-to-class="transform translate-y-0 opacity-100 scale-100"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="transform translate-y-0 opacity-100 scale-100"
+        leave-to-class="transform -translate-y-4 opacity-0 scale-95"
+    >
+        <div v-if="showSuccessToast" 
+             style="position: fixed; top: 120px; right: 40px; z-index: 9999; background-color: #10b981; border: 1px solid #34d399; color: white; display: flex; align-items: center; gap: 12px; border-radius: 16px; padding: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); max-width: 400px;">
+            <div style="display: flex; width: 32px; height: 32px; border-radius: 9999px; background-color: rgba(255, 255, 255, 0.2); align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px; color: white;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div style="display: flex; flex-direction: column; text-align: left;">
+                <p style="font-weight: 700; margin: 0; line-height: 1.25;">Berhasil!</p>
+                <p style="font-size: 14px; opacity: 0.95; margin: 4px 0 0 0; line-height: 1.375;">{{ toastMessage }}</p>
+            </div>
+        </div>
+    </Transition>
+
     <header class="w-full max-w-[1920px] mx-auto overflow-hidden bg-custom-background">
         <div class="flex flex-col w-full max-w-[1280px] py-6 px-[52px] gap-3 mx-auto">
             <div class="flex items-center gap-3">
@@ -316,18 +399,22 @@ watch(
                             </div>
                         </div>
                         <div class="flex flex-col gap-4">
-                            <div class="flex items-center gap-5">
-                                <button type="button" @click.prevent="addToCart"
-                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 bg-custom-blue cursor-pointer">
-                                    <img src="@/assets/images/icons/shopping-cart-white.svg"
-                                        class="flex size-6 shrink-0" alt="icon">
-                                    <span class="font-bold text-white">Add to Cart</span>
-                                </button>
-                                <button
-                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 border border-custom-stroke">
-                                    <img src="@/assets/images/icons/heart-grey.svg" class="flex size-6 shrink-0"
+                            <div class="flex items-center gap-3 w-full">
+                                <button type="button" @click.prevent="toggleFavorite"
+                                    class="flex items-center justify-center size-16 shrink-0 rounded-2xl border transition-300"
+                                    :class="isFavorited ? 'border-custom-red bg-custom-red/5' : 'border-custom-stroke hover:bg-custom-red/5'">
+                                    <img :src="isFavorited ? heartRedIcon : heartGreyIcon" class="flex size-6 shrink-0"
                                         alt="icon">
-                                    <span class="font-bold text-custom-grey">Add To Wishlist</span>
+                                </button>
+                                <button type="button" @click.prevent="addToCart"
+                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 border border-custom-blue hover:bg-custom-blue/5 transition-300">
+                                    <img src="@/assets/images/icons/shopping-cart-blue.svg"
+                                        class="flex size-6 shrink-0" alt="icon">
+                                    <span class="font-bold text-custom-blue">Add to Cart</span>
+                                </button>
+                                <button type="button" @click.prevent="buyNow"
+                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 bg-custom-blue hover:bg-custom-blue/90 transition-300">
+                                    <span class="font-bold text-white">Buy Now</span>
                                 </button>
                             </div>
                             <p class="flex items-center gap-1 font-semibold text-custom-red text-lg leading-none">

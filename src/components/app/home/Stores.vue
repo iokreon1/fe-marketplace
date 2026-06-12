@@ -52,10 +52,10 @@ onMounted(async () => {
     <section id="Trusted-Seller" class="flex flex-col gap-9">
         <div class="flex items-center justify-between">
             <h2 class="font-extrabold text-[32px]">Trusted Sellers,<br>Quality Guaranteed</h2>
-            <a href="#" class="flex items-center h-14 rounded-[18px] py-4 px-6 gap-[10px] bg-custom-black">
+            <RouterLink :to="{ name: 'app.stores' }" class="flex items-center h-14 rounded-[18px] py-4 px-6 gap-[10px] bg-custom-black">
                 <span class="font-medium text-white">VIEW ALL</span>
                 <img src="@/assets/images/icons/arrow-right-white.svg" class="flex size-6 shrink-0" alt="icon">
-            </a>
+            </RouterLink>
         </div>
         <div class="flex flex-col gap-6 relative">
             <div class="storeSwiper w-full overflow-hidden">

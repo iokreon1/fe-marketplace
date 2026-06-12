@@ -55,10 +55,12 @@ watch(() => route.query.q, (newQuery) => {
                 </RouterLink>
                 <span class="font-medium text-xl text-custom-grey">/</span>
                 <span class="font-semibold text-lg text-custom-blue">
-                    Search Results
+                    {{ searchQuery ? 'Search Results' : 'All Products' }}
                 </span>
             </div>
-            <h1 class="font-extrabold text-[32px] capitalize">Search Results for: "{{ searchQuery }}"</h1>
+            <h1 class="font-extrabold text-[32px] capitalize">
+                {{ searchQuery ? `Search Results for: "${searchQuery}"` : 'Explore All Products' }}
+            </h1>
             <div class="flex items-center gap-4">
                 <div class="group flex items-center gap-2">
                     <img src="@/assets/images/icons/box-grey.svg" class="flex size-5 shrink-0" alt="icon">
