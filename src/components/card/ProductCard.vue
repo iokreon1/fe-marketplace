@@ -1,13 +1,54 @@
 <script setup>
 import { formatRupiah } from '@/helpers/format';
+import { useWishlistStore } from '@/stores/wishlist';
+import { useCartStore } from '@/stores/cart';
+import { useAuthStore } from '@/stores/auth';
+import { useToastStore } from '@/stores/toast';
+import { useRouter } from 'vue-router';
+import { computed } from 'vue';
 import _ from 'lodash'
 
-defineProps({
+const props = defineProps({
     item: {
         type: Object,
         required: true
     }
 })
+
+const wishlistStore = useWishlistStore()
+const cartStore = useCartStore()
+const authStore = useAuthStore()
+const toastStore = useToastStore()
+const router = useRouter()
+
+const isFavorited = computed(() => {
+    return wishlistStore.isWishlisted(props.item.id)
+})
+
+const handleToggleWishlist = () => {
+    if (!authStore.token) {
+        router.push({ name: 'auth.login' })
+        return
+    }
+    const added = wishlistStore.toggleWishlist(props.item)
+    if (added) {
+        toastStore.showToast(`"${props.item.name}" telah ditambahkan ke daftar Wishlist!`)
+    } else {
+        toastStore.showToast(`"${props.item.name}" dihapus dari daftar Wishlist!`)
+    }
+}
+
+const handleAddToCart = () => {
+    if (!authStore.token) {
+        router.push({ name: 'auth.login' })
+        return
+    }
+    cartStore.addToCart({
+        ...props.item,
+        quantity: 1
+    })
+    toastStore.showToast(`"${props.item.name}" telah ditambahkan ke keranjang belanja!`)
+}
 </script>
 
 <template>
@@ -37,18 +78,21 @@ defineProps({
                 </div>
             </div>
             <div class="flex items-center gap-3 w-full">
-                <button
-                    class="group flex items-center justify-center size-14 shrink-0 rounded-2xl p-4 gap-2 bg-custom-red/10 hover:bg-custom-red transition-300">
+                <button @click.prevent="handleToggleWishlist" type="button"
+                    class="group flex items-center justify-center size-14 shrink-0 rounded-2xl p-4 gap-2 transition-300"
+                    :class="isFavorited ? 'bg-custom-red' : 'bg-custom-red/10 hover:bg-custom-red'">
                     <div class="relative size-6">
                         <img src="@/assets/images/icons/heart-red.svg"
-                            class="absolute flex size-6 shrink-0 opacity-100 group-hover:opacity-0 transition-300"
+                            class="absolute flex size-6 shrink-0 transition-300"
+                            :class="isFavorited ? 'opacity-0' : 'opacity-100 group-hover:opacity-0'"
                             alt="icon">
                         <img src="@/assets/images/icons/heart-white-fill.svg"
-                            class="absolute flex size-6 shrink-0 opacity-0 group-hover:opacity-100 transition-300"
+                            class="absolute flex size-6 shrink-0 transition-300"
+                            :class="isFavorited ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
                             alt="icon">
                     </div>
                 </button>
-                <RouterLink :to="{ name: 'app.product-detail', params: { slug: item.slug } }" class="group flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-[6px]
+                <button type="button" @click.prevent="handleAddToCart" class="group flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-[6px]
                     bg-custom-blue/10 hover:bg-custom-blue transition-300">
                     <div class="flex size-6 shrink-0 relative">
                         <img src="@/assets/images/icons/shopping-cart-blue.svg"
@@ -60,7 +104,7 @@ defineProps({
                     </div>
                     <span class="font-semibold text-custom-blue group-hover:text-white transition-300">Add
                         to Cart</span>
-                </RouterLink>
+                </button>
             </div>
         </div>
     </div>

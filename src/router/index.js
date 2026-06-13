@@ -10,6 +10,7 @@ import AppProductDetail from '@/views/app/ProductDetail.vue'
 import AppStoreDetail from '@/views/app/StoreDetail.vue'
 import Cart from '@/views/app/Cart.vue'
 import Checkout from '@/views/app/Checkout.vue'
+import Wishlist from '@/views/app/Wishlist.vue'
 import Login from '@/views/auth/Login.vue'
 import Register from '@/views/auth/Register.vue'
 import Dashboard from '@/views/admin/Dashboard.vue'
@@ -108,6 +109,14 @@ const router = createRouter({
           path: '/cart',
           name: 'app.cart',
           component: Cart
+        },
+        {
+          path: '/wishlist',
+          name: 'app.wishlist',
+          component: Wishlist,
+          meta: {
+            requiresAuth: true
+          }
         },
         {
           path: '/checkout',

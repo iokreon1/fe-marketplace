@@ -1,6 +1,10 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth';
 import { useProductCategoryStore } from '@/stores/productCategory';
+import { useWishlistStore } from '@/stores/wishlist';
+import { useCartStore } from '@/stores/cart';
+import heartGreyIcon from '@/assets/images/icons/heart-grey.svg';
+import heartRedIcon from '@/assets/images/icons/heart-red.svg';
 import { storeToRefs } from 'pinia';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -17,6 +21,9 @@ const productCategoryStore = useProductCategoryStore()
 const { productCategories } = storeToRefs(productCategoryStore)
 
 const router = useRouter()
+
+const wishlistStore = useWishlistStore()
+const cartStore = useCartStore()
 
 const handleSearch = () => {
     if (searchQuery.value.trim()) {
@@ -102,14 +109,28 @@ onUnmounted(() => {
                                 <img src="@/assets/images/icons/notification-black.svg" class="size-6" alt="icon">
                             </div>
                         </a>
-                        <RouterLink :to="{ name: 'app.cart' }">
+                        <RouterLink :to="{ name: 'app.wishlist' }" class="relative">
+                            <div
+                                class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden">
+                                <img :src="wishlistStore.totalItems > 0 ? heartRedIcon : heartGreyIcon" class="size-6" alt="icon">
+                            </div>
+                            <span v-if="wishlistStore.totalItems > 0" 
+                                  style="position: absolute; top: -4px; right: -4px; background-color: #ef4444; color: white; font-size: 10px; font-weight: 700; border-radius: 9999px; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid white; padding: 0 4px;">
+                                {{ wishlistStore.totalItems }}
+                            </span>
+                        </RouterLink>
+                        <RouterLink :to="{ name: 'app.cart' }" class="relative">
                             <div
                                 class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden">
                                 <img src="@/assets/images/icons/shopping-cart-black.svg" class="size-6" alt="icon">
                             </div>
+                            <span v-if="cartStore.totalItems > 0" 
+                                  style="position: absolute; top: -4px; right: -4px; background-color: #2563eb; color: white; font-size: 10px; font-weight: 700; border-radius: 9999px; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid white; padding: 0 4px;">
+                                {{ cartStore.totalItems }}
+                            </span>
                         </RouterLink>
                         <RouterLink :to="{ name: 'auth.login' }"
-                            class="flex shrink-0 h-14 rounded-[18px] py-4 px-8 bg-custom-blue" v-if="!user && !token">
+                            class="flex shrink-0 h-14 rounded-[18px] py-4 px-8 bg-custom-blue" v-if="!user">
                             <p class="font-medium text-white">Sign In/Register</p>
                         </RouterLink>
                         <div v-else-if="!user && token" class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden animate-pulse">
