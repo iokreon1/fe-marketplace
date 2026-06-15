@@ -21,6 +21,10 @@ const authStore = useAuthStore()
 const toastStore = useToastStore()
 const router = useRouter()
 
+const isOutOfStock = computed(() => {
+    return !props.item || props.item.stock <= 0
+})
+
 const isFavorited = computed(() => {
     return wishlistStore.isWishlisted(props.item.id)
 })
@@ -39,6 +43,7 @@ const handleToggleWishlist = () => {
 }
 
 const handleAddToCart = () => {
+    if (isOutOfStock.value) return
     if (!authStore.token) {
         router.push({ name: 'auth.login' })
         return
@@ -56,7 +61,7 @@ const handleAddToCart = () => {
         <RouterLink :to="{ name: 'app.product-detail', params: { slug: item.slug } }">
             <div class="thumbnail w-full h-[192px] overflow-hidden bg-custom-background items-center justify-center">
                 <img :src="item?.product_images?.find(image => image.is_thumbnail)?.image"
-                    class="size-full object-contain" alt="thumbnail">
+                     class="size-full object-contain" alt="thumbnail">
             </div>
         </RouterLink>
         <div
@@ -92,9 +97,9 @@ const handleAddToCart = () => {
                             alt="icon">
                     </div>
                 </button>
-                <button type="button" @click.prevent="handleAddToCart" class="group flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-[6px]
-                    bg-custom-blue/10 hover:bg-custom-blue transition-300">
-                    <div class="flex size-6 shrink-0 relative">
+                <button type="button" @click.prevent="handleAddToCart" :disabled="isOutOfStock" class="group flex items-center justify-center h-14 w-full rounded-2xl p-4 gap-[6px] transition-300"
+                    :class="isOutOfStock ? 'bg-gray-100 text-custom-grey cursor-not-allowed opacity-50' : 'bg-custom-blue/10 hover:bg-custom-blue'">
+                    <div class="flex size-6 shrink-0 relative" v-if="!isOutOfStock">
                         <img src="@/assets/images/icons/shopping-cart-blue.svg"
                             class="absolute flex size-6 shrink-0 opacity-100 group-hover:opacity-0 transition-300"
                             alt="icon">
@@ -102,8 +107,14 @@ const handleAddToCart = () => {
                             class="absolute flex size-6 shrink-0 opacity-0 group-hover:opacity-100 transition-300"
                             alt="icon">
                     </div>
-                    <span class="font-semibold text-custom-blue group-hover:text-white transition-300">Add
-                        to Cart</span>
+                    <div class="flex size-6 shrink-0 relative" v-else>
+                        <img src="@/assets/images/icons/shopping-cart-grey.svg"
+                            class="absolute flex size-6 shrink-0 opacity-100 transition-300"
+                            alt="icon">
+                    </div>
+                    <span :class="isOutOfStock ? 'font-semibold text-custom-grey' : 'font-semibold text-custom-blue group-hover:text-white transition-300'">
+                        {{ isOutOfStock ? 'Stok Habis' : 'Add to Cart' }}
+                    </span>
                 </button>
             </div>
         </div>

@@ -43,11 +43,15 @@ const handleImageChange = (e) => {
 }
 
 const handleAddressInput = debounce(async (search) => {
+    if (!search || !search.trim()) {
+        showAddressOptions.value = false;
+        return;
+    }
     loadingAddress.value = true;
     try {
-        const response = await fetch(`/tariff/api/v1/destination/search?keyword=${encodeURIComponent(search)}`, {
+        const response = await fetch(`/tariff/api/v1/destination/domestic-destination?search=${encodeURIComponent(search)}`, {
             headers: {
-                'x-api-key': import.meta.env.VITE_KEY_RAJA_ONGKIR
+                'key': import.meta.env.VITE_KEY_RAJA_ONGKIR
             }
         });
 

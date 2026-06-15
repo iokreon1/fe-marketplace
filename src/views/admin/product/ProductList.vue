@@ -9,6 +9,7 @@ import { watch } from 'vue';
 import Pagination from '@/components/admin/Pagination.vue';
 import Alert from '@/components/admin/Alert.vue';
 import { can } from '@/helpers/permissionHelper';
+import { axiosInstance } from '@/plugins/axios';
 
 const productStore = useProductStore()
 const { products, meta, loading, error, success } = storeToRefs(productStore)
@@ -26,11 +27,22 @@ const filters = ref({
     search: null
 })
 
+const totalSold = ref(0)
+
 const fetchData = async () => {
     await fetchProductsPaginated({
         ...serverOptions.value,
         ...filters.value
     })
+    
+    try {
+        const response = await axiosInstance.get('product')
+        if (response.data && response.data.data) {
+            totalSold.value = response.data.data.reduce((sum, p) => sum + (p.sold_count ?? 0), 0)
+        }
+    } catch (err) {
+        console.error('Error fetching total sold count:', err)
+    }
 }
 
 async function handleDelete(id) {
@@ -73,7 +85,7 @@ watch(filters, () => {
                     <img src="@/assets/images/icons/presention-chart-blue.svg" class="flex size-6 shrink-0" alt="icon">
                 </div>
                 <div class="flex flex-col gap-[6px]">
-                    <p class="font-bold text-4xl">3.200</p>
+                    <p class="font-bold text-4xl">{{ totalSold }}</p>
                     <p class="font-medium text-lg text-custom-grey">
                         Total Sold
                     </p>

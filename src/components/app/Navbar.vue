@@ -42,10 +42,15 @@ const closeDropdowns = (e) => {
 
 onMounted(async () => {
     window.addEventListener('click', closeDropdowns)
+    if (!token.value) {
+        cartStore.clearCart()
+        wishlistStore.clearWishlist()
+    }
     try {
         await checkAuth()
     } catch (error) {
-        // ignore if unauthorized
+        cartStore.clearCart()
+        wishlistStore.clearWishlist()
     }
     try {
         await productCategoryStore.fetchProductCategories()
@@ -112,9 +117,9 @@ onUnmounted(() => {
                         <RouterLink :to="{ name: 'app.wishlist' }" class="relative">
                             <div
                                 class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden">
-                                <img :src="wishlistStore.totalItems > 0 ? heartRedIcon : heartGreyIcon" class="size-6" alt="icon">
+                                <img :src="token && wishlistStore.totalItems > 0 ? heartRedIcon : heartGreyIcon" class="size-6" alt="icon">
                             </div>
-                            <span v-if="wishlistStore.totalItems > 0" 
+                            <span v-if="token && wishlistStore.totalItems > 0" 
                                   style="position: absolute; top: -4px; right: -4px; background-color: #ef4444; color: white; font-size: 10px; font-weight: 700; border-radius: 9999px; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid white; padding: 0 4px;">
                                 {{ wishlistStore.totalItems }}
                             </span>
@@ -124,7 +129,7 @@ onUnmounted(() => {
                                 class="flex size-14 rounded-full bg-custom-icon-background items-center justify-center overflow-hidden">
                                 <img src="@/assets/images/icons/shopping-cart-black.svg" class="size-6" alt="icon">
                             </div>
-                            <span v-if="cartStore.totalItems > 0" 
+                            <span v-if="token && cartStore.totalItems > 0" 
                                   style="position: absolute; top: -4px; right: -4px; background-color: #2563eb; color: white; font-size: 10px; font-weight: 700; border-radius: 9999px; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid white; padding: 0 4px;">
                                 {{ cartStore.totalItems }}
                             </span>

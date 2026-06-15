@@ -34,7 +34,7 @@ const emit = defineEmits(['delete'])
                     <img src="@/assets/images/icons/status-up-black.svg" class="flex size-6 shrink-0" alt="icon">
                 </div>
                 <div class="flex flex-col gap-1">
-                    <p class="font-bold text-lg leading-none">500</p>
+                    <p class="font-bold text-lg leading-none">{{ item.sold_count ?? 0 }}</p>
                     <p class="font-semibold text-custom-grey">Total Sold</p>
                 </div>
             </div>

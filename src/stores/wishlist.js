@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 
-const STORAGE_KEY = 'wishlist_items'
 
 export const useWishlistStore = defineStore('wishlist', {
     state: () => ({
-        items: JSON.parse(localStorage.getItem(STORAGE_KEY)) || []
+        items: [],
+        currentUserId: null
     }),
 
     getters: {
@@ -15,6 +15,11 @@ export const useWishlistStore = defineStore('wishlist', {
     },
 
     actions: {
+        loadForUser(userId) {
+            this.currentUserId = userId
+            this.items = JSON.parse(localStorage.getItem(`wishlist_items_${userId}`)) || []
+        },
+
         toggleWishlist(product) {
             const index = this.items.findIndex(item => item.id === product.id)
             let added = false
@@ -39,11 +44,12 @@ export const useWishlistStore = defineStore('wishlist', {
 
         clearWishlist() {
             this.items = []
-            this.save()
+            this.currentUserId = null
         },
 
         save() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.items))
+            const userId = this.currentUserId || 'guest'
+            localStorage.setItem(`wishlist_items_${userId}`, JSON.stringify(this.items))
         }
     }
 })

@@ -68,11 +68,21 @@ const nextPage = () => {
     }
 }
 
+const isOutOfStock = computed(() => {
+    return !product.value || product.value.stock <= 0
+})
+
 const fetchProduct = async () => {
     const response = await fetchProductBySlug(route.params.slug)
 
     if (response) {
         product.value = response
+
+        if (product.value.stock <= 0) {
+            quantity.value = 0
+        } else {
+            quantity.value = 1
+        }
 
         if (product.value.product_images) {
             product.value.product_images.sort((a, b) => {
@@ -89,18 +99,21 @@ function setActiveImage(image) {
 }
 
 const increase = () => {
+    if (isOutOfStock.value) return
     if (quantity.value < product.value.stock) {
         quantity.value++
     }
 }
 
 const decrease = () => {
+    if (isOutOfStock.value) return
     if (quantity.value > 1) {
         quantity.value--
     }
 }
 
 const addToCart = () => {
+    if (isOutOfStock.value) return
     if (!checkUserAuth()) return
     if (!product.value) return
     cart.addToCart({
@@ -111,6 +124,7 @@ const addToCart = () => {
 }
 
 const buyNow = () => {
+    if (isOutOfStock.value) return
     if (!checkUserAuth()) return
     if (!product.value || !product.value.store) return
     cart.addToCart({
@@ -158,6 +172,49 @@ watch(
         })
     }
 )
+
+const quantityError = ref('')
+let errorTimeout = null
+
+watch(quantity, (newVal) => {
+    if (newVal === null || newVal === undefined || newVal === '') {
+        quantityError.value = ''
+        return
+    }
+    
+    const val = Number(newVal)
+    if (isNaN(val)) return
+
+    const maxStock = product.value?.stock || 0
+
+    if (val > maxStock) {
+        quantity.value = maxStock
+        showError(`Maksimal pembelian adalah ${maxStock} unit`)
+    } else if (val < 1) {
+        quantity.value = 1
+        showError(`Minimal pembelian adalah 1 unit`)
+    } else {
+        if (val !== maxStock && val !== 1) {
+            quantityError.value = ''
+            if (errorTimeout) clearTimeout(errorTimeout)
+        }
+    }
+})
+
+function showError(msg) {
+    quantityError.value = msg
+    if (errorTimeout) clearTimeout(errorTimeout)
+    errorTimeout = setTimeout(() => {
+        quantityError.value = ''
+    }, 4000)
+}
+
+const handleQuantityBlur = () => {
+    if (!quantity.value || quantity.value < 1) {
+        quantity.value = 1
+        quantityError.value = ''
+    }
+}
 </script>
 
 <template>
@@ -335,6 +392,13 @@ watch(
                                 <p class="font-semibold text-lg text-custom-grey">Order Status:</p>
                                 <p class="font-bold text-lg">Ready to Ship</p>
                             </div>
+                            <hr class="border-custom-stroke">
+                            <div class="flex items-center justify-between">
+                                <p class="font-semibold text-lg text-custom-grey">Stock:</p>
+                                <p class="font-bold text-lg" :class="isOutOfStock ? 'text-custom-red' : 'text-custom-black'">
+                                    {{ isOutOfStock ? 'Stok Habis' : `${product?.stock} Unit` }}
+                                </p>
+                            </div>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex flex-col gap-[6px]">
@@ -345,22 +409,36 @@ watch(
                                 <p class="font-bold text-2xl text-custom-blue leading-none">Rp {{
                                     formatRupiah(product?.price) }}</p>
                             </div>
-                            <div
-                                class="quantity-container flex items-center shrink-0 rounded-2xl border border-custom-stroke p-4">
-                                <button type="button" class="subtract size-5 flex items-center justify-center"
-                                    @click="decrease">
-                                    <span class="text-[30px] font-light leading-none align-middle mb-1">-</span>
-                                </button>
-                                <div class="h-[18px] border border-custom-stroke ml-4"></div>
-                                <input type="number" name="" value="1"
-                                    class="amount appearance-none w-[70px] pl-5 text-center font-bold text-lg"
-                                    v-model="quantity">
-                                <div class="h-[18px] border border-custom-stroke mr-4"></div>
-                                <button type="button" class="add size-5 flex items-center justify-center"
-                                    @click="increase">
-                                    <span class="text-[24px] font-light leading-none align-middle mb-1">+</span>
-                                </button>
+                            <div class="flex flex-col items-end gap-2 shrink-0">
+                                <div
+                                    class="quantity-container flex items-center shrink-0 rounded-2xl border border-custom-stroke p-4"
+                                    :class="{ 'opacity-50 cursor-not-allowed bg-gray-50': isOutOfStock }">
+                                    <button type="button" class="subtract size-5 flex items-center justify-center"
+                                        :disabled="isOutOfStock || quantity <= 1"
+                                        @click="decrease">
+                                        <span class="text-[30px] font-light leading-none align-middle mb-1">-</span>
+                                    </button>
+                                    <div class="h-[18px] border border-custom-stroke ml-4"></div>
+                                    <input type="number" name="" :disabled="isOutOfStock"
+                                        class="amount appearance-none w-[70px] pl-5 text-center font-bold text-lg"
+                                        v-model.number="quantity"
+                                        @blur="handleQuantityBlur">
+                                    <div class="h-[18px] border border-custom-stroke mr-4"></div>
+                                    <button type="button" class="add size-5 flex items-center justify-center"
+                                        :disabled="isOutOfStock || quantity >= product.stock"
+                                        @click="increase">
+                                        <span class="text-[24px] font-light leading-none align-middle mb-1">+</span>
+                                    </button>
+                                </div>
+                                <span v-if="!isOutOfStock" class="text-sm font-semibold text-custom-grey mr-2">
+                                    Tersedia: {{ product?.stock }} unit
+                                </span>
                             </div>
+                        </div>
+                        <div v-if="quantityError" class="flex justify-end -mt-2">
+                            <span class="text-sm font-bold text-custom-red mr-2">
+                                {{ quantityError }}
+                            </span>
                         </div>
                         <div class="flex flex-col gap-4">
                             <div class="flex items-center gap-3 w-full">
@@ -370,15 +448,17 @@ watch(
                                     <img :src="isFavorited ? heartRedIcon : heartGreyIcon" class="flex size-6 shrink-0"
                                         alt="icon">
                                 </button>
-                                <button type="button" @click.prevent="addToCart"
-                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 border border-custom-blue hover:bg-custom-blue/5 transition-300">
-                                    <img src="@/assets/images/icons/shopping-cart-blue.svg"
-                                        class="flex size-6 shrink-0" alt="icon">
-                                    <span class="font-bold text-custom-blue">Add to Cart</span>
+                                <button type="button" @click.prevent="addToCart" :disabled="isOutOfStock"
+                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 transition-300"
+                                    :class="isOutOfStock ? 'border-custom-grey bg-gray-100 text-custom-grey cursor-not-allowed opacity-50' : 'border border-custom-blue hover:bg-custom-blue/5 text-custom-blue'">
+                                    <img src="@/assets/images/icons/shopping-cart-grey.svg" v-if="isOutOfStock" class="flex size-6 shrink-0" alt="icon">
+                                    <img src="@/assets/images/icons/shopping-cart-blue.svg" v-else class="flex size-6 shrink-0" alt="icon">
+                                    <span class="font-bold">{{ isOutOfStock ? 'Stok Habis' : 'Add to Cart' }}</span>
                                 </button>
-                                <button type="button" @click.prevent="buyNow"
-                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 bg-custom-blue hover:bg-custom-blue/90 transition-300">
-                                    <span class="font-bold text-white">Buy Now</span>
+                                <button type="button" @click.prevent="buyNow" :disabled="isOutOfStock"
+                                    class="flex items-center justify-center h-16 w-full rounded-2xl p-4 gap-2 transition-300"
+                                    :class="isOutOfStock ? 'bg-gray-200 text-custom-grey cursor-not-allowed opacity-50' : 'bg-custom-blue hover:bg-custom-blue/90 text-white'">
+                                    <span class="font-bold">{{ isOutOfStock ? 'Stok Habis' : 'Buy Now' }}</span>
                                 </button>
                             </div>
                             <p class="flex items-center gap-1 font-semibold text-custom-red text-lg leading-none">

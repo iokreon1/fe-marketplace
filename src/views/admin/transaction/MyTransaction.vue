@@ -18,7 +18,8 @@ const serverOptions = ref({
 })
 
 const filters = ref({
-    search: ''
+    search: '',
+    status: ''
 })
 
 const fetchData = async (resetPage = false) => {
@@ -46,6 +47,15 @@ watch(() => serverOptions.value.row_per_page, () => {
 watch(() => filters.value.search, () => {
     debounceFetchData()
 })
+
+watch(() => filters.value.status, () => {
+    fetchData(true)
+})
+
+const resetFilters = () => {
+    filters.value.status = ''
+    filters.value.search = ''
+}
 </script>
 
 <template>
@@ -59,6 +69,42 @@ watch(() => filters.value.search, () => {
                 </div>
             </div>
         </div>
+
+        <!-- Transaction Status Filter Pills -->
+        <div class="flex items-center gap-4 flex-wrap pb-2 border-b border-custom-stroke">
+            <span class="font-bold text-custom-black">Status</span>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" @click="filters.status = ''"
+                    class="h-10 px-5 rounded-full font-semibold transition-300 text-sm flex items-center justify-center border"
+                    :class="filters.status === '' ? 'bg-custom-blue/5 border-custom-blue text-custom-blue' : 'border-custom-stroke text-custom-grey hover:bg-custom-background'">
+                    Semua
+                </button>
+                <button type="button" @click="filters.status = 'berlangsung'"
+                    class="h-10 px-5 rounded-full font-semibold transition-300 text-sm flex items-center justify-center border"
+                    :class="filters.status === 'berlangsung' ? 'bg-custom-blue/5 border-custom-blue text-custom-blue' : 'border-custom-stroke text-custom-grey hover:bg-custom-background'">
+                    Berlangsung
+                </button>
+                <button type="button" @click="filters.status = 'berhasil'"
+                    class="h-10 px-5 rounded-full font-semibold transition-300 text-sm flex items-center justify-center border"
+                    :class="filters.status === 'berhasil' ? 'bg-custom-blue/5 border-custom-blue text-custom-blue' : 'border-custom-stroke text-custom-grey hover:bg-custom-background'">
+                    Berhasil
+                </button>
+                <button type="button" @click="filters.status = 'gagal'"
+                    class="h-10 px-5 rounded-full font-semibold transition-300 text-sm flex items-center justify-center border"
+                    :class="filters.status === 'gagal' ? 'bg-custom-blue/5 border-custom-blue text-custom-blue' : 'border-custom-stroke text-custom-grey hover:bg-custom-background'">
+                    Tidak Berhasil
+                </button>
+                <button type="button"
+                    class="h-10 px-5 rounded-full font-semibold border border-custom-stroke text-custom-grey opacity-50 cursor-not-allowed text-sm flex items-center justify-center">
+                    E-tiket & E-voucher Aktif
+                </button>
+            </div>
+            <button type="button" @click="resetFilters" v-if="filters.status !== '' || filters.search !== ''"
+                class="font-bold text-custom-blue hover:underline text-sm ml-2">
+                Reset Filter
+            </button>
+        </div>
+
         <div id="Filter" class="flex items-center justify-between">
             <form action="#" @submit.prevent>
                 <label

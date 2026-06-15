@@ -1,8 +1,5 @@
 import { defineStore } from 'pinia'
 
-const STORAGE_KEY = 'grouped_cart'
-const SELECTED_STORES_KEY = 'selected_stores'
-
 /**
  * Cart store, menyimpan data cart dalam bentuk array of objects.
  * Setiap object dalam array mewakili satu toko, dan memiliki properti:
@@ -18,12 +15,13 @@ const SELECTED_STORES_KEY = 'selected_stores'
  */
 export const useCartStore = defineStore('cart', {
     state: () => ({
-        carts: JSON.parse(localStorage.getItem(STORAGE_KEY)) || [],
+        carts: [],
         /**
          * Set of storeIds yang dipilih oleh user.
          * Digunakan untuk menghitung subtotal, ppn, dan grand total.
          */
-        selectedStores: new Set(JSON.parse(localStorage.getItem(SELECTED_STORES_KEY)) || [])
+        selectedStores: new Set(),
+        currentUserId: null
     }),
 
     getters: {
@@ -113,6 +111,16 @@ export const useCartStore = defineStore('cart', {
 
     actions: {
         /**
+         * Load cart data for specific user from localStorage.
+         * @param {string} userId - id user
+         */
+        loadForUser(userId) {
+            this.currentUserId = userId
+            this.carts = JSON.parse(localStorage.getItem(`grouped_cart_${userId}`)) || []
+            this.selectedStores = new Set(JSON.parse(localStorage.getItem(`selected_stores_${userId}`)) || [])
+        },
+
+        /**
          * Toggle selection untuk toko.
          * @param {string} storeId - id toko yang akan di-toggle
          */
@@ -138,7 +146,8 @@ export const useCartStore = defineStore('cart', {
          * Save selected stores to localStorage.
          */
         saveSelectedStores() {
-            localStorage.setItem(SELECTED_STORES_KEY, JSON.stringify([...this.selectedStores]))
+            const userId = this.currentUserId || 'guest'
+            localStorage.setItem(`selected_stores_${userId}`, JSON.stringify([...this.selectedStores]))
         },
 
         /**
@@ -245,15 +254,15 @@ export const useCartStore = defineStore('cart', {
         clearCart() {
             this.carts = []
             this.selectedStores.clear()
-            this.save()
-            this.saveSelectedStores()
+            this.currentUserId = null
         },
 
         /**
          * Save cart to localStorage.
          */
         save() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.carts))
+            const userId = this.currentUserId || 'guest'
+            localStorage.setItem(`grouped_cart_${userId}`, JSON.stringify(this.carts))
         }
     }
 })

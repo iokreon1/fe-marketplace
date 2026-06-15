@@ -3,6 +3,17 @@ import { axiosInstance } from "@/plugins/axios";
 import Cookies from "js-cookie";
 import { defineStore } from "pinia";
 import router from "@/router";
+import { useCartStore } from "@/stores/cart";
+import { useWishlistStore } from "@/stores/wishlist";
+
+const syncUserStores = (user) => {
+    if (user && user.id) {
+        const cartStore = useCartStore()
+        const wishlistStore = useWishlistStore()
+        cartStore.loadForUser(user.id)
+        wishlistStore.loadForUser(user.id)
+    }
+}
 
 export const useAuthStore = defineStore("auth", {
     state: () => ({
@@ -30,6 +41,7 @@ export const useAuthStore = defineStore("auth", {
                 this.token = token
                 this.user = response.data.data
                 this.success = response.data.message
+                syncUserStores(this.user)
 
                 return response.data.data
             } catch (error) {
@@ -64,11 +76,18 @@ export const useAuthStore = defineStore("auth", {
             try {
                 const response = await axiosInstance.get('/me');
                 this.user = response.data.data;
+                syncUserStores(this.user)
                 return this.user;
             } catch (error) {
                 if (error.response && error.response.status === 401) {
                     Cookies.remove('token');
                     this.token = null;
+
+                    const cartStore = useCartStore();
+                    const wishlistStore = useWishlistStore();
+                    cartStore.clearCart();
+                    wishlistStore.clearWishlist();
+
                     throw new Error("Unauthorized");
                 }
                 this.error = handleError(error);
@@ -91,6 +110,7 @@ export const useAuthStore = defineStore("auth", {
 
                 this.user = response.data.data
                 this.success = response.data.message
+                syncUserStores(this.user)
                 return response.data.data
             } catch (error) {
                 this.error = handleError(error)
@@ -114,6 +134,11 @@ export const useAuthStore = defineStore("auth", {
                 this.user = null
                 this.error = null
                 this.loading = false
+
+                const cartStore = useCartStore()
+                const wishlistStore = useWishlistStore()
+                cartStore.clearCart()
+                wishlistStore.clearWishlist()
 
                 router.push({ name: 'auth.login' })
             }
