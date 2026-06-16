@@ -233,6 +233,9 @@ const handleSubmit = async () => {
                         </li>
                     </ul>
                     <span class="text-xs text-custom-grey" v-if="loadingAddress">Searching locations...</span>
+                    <span class="text-sm font-semibold text-custom-red" v-if="!profile.city">
+                        * Silakan cari & pilih wilayah Anda agar Kota & Kode Pos terisi otomatis.
+                    </span>
                     <span class="input-error" v-if="error?.address_id">{{ error?.address_id?.join(', ') }}</span>
                 </div>
             </div>
@@ -259,12 +262,37 @@ const handleSubmit = async () => {
                 </div>
             </div>
 
-            <!-- City & Postal Code (Buyer Only - Readonly/Generated from search) -->
-            <div v-if="user?.role === 'buyer' && profile.city" class="flex items-center justify-between">
-                <p class="font-semibold text-custom-grey">Selected City & Zip</p>
-                <div class="flex gap-4 w-1/2">
-                    <input type="text" class="custom-input !pt-[25px] !pb-[25px] w-2/3 bg-custom-background cursor-not-allowed" readonly :value="profile.city">
-                    <input type="text" class="custom-input !pt-[25px] !pb-[25px] w-1/3 bg-custom-background cursor-not-allowed" readonly :value="profile.postal_code">
+            <!-- City (Buyer Only - Readonly/Generated from search) -->
+            <div v-if="user?.role === 'buyer'" class="flex items-center justify-between">
+                <p class="font-semibold text-custom-grey">Your City</p>
+                <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.city }">
+                    <label class="group relative">
+                        <div class="input-icon">
+                            <img src="@/assets/images/icons/buildings-grey.svg" class="flex size-6 shrink-0" alt="icon">
+                        </div>
+                        <p class="input-placeholder">
+                            Your City
+                        </p>
+                        <input type="text" class="custom-input bg-custom-background cursor-not-allowed" readonly placeholder=" " v-model="profile.city">
+                    </label>
+                    <span class="input-error" v-if="error?.city">{{ error?.city?.join(', ') }}</span>
+                </div>
+            </div>
+
+            <!-- Postal Code (Buyer Only - Readonly/Generated from search) -->
+            <div v-if="user?.role === 'buyer'" class="flex items-center justify-between">
+                <p class="font-semibold text-custom-grey">Post Code</p>
+                <div class="group/errorState flex flex-col gap-2 w-1/2" :class="{ 'invalid': error?.postal_code }">
+                    <label class="group relative">
+                        <div class="input-icon">
+                            <img src="@/assets/images/icons/keyboard-grey.svg" class="flex size-6 shrink-0" alt="icon">
+                        </div>
+                        <p class="input-placeholder">
+                            Post Code
+                        </p>
+                        <input type="text" class="custom-input bg-custom-background cursor-not-allowed" readonly placeholder=" " v-model="profile.postal_code">
+                    </label>
+                    <span class="input-error" v-if="error?.postal_code">{{ error?.postal_code?.join(', ') }}</span>
                 </div>
             </div>
 

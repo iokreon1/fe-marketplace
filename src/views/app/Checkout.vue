@@ -289,19 +289,20 @@ onMounted(() => {
                             </div>
                             <div class="flex flex-col shrink-0 items-end gap-2">
                                 <p class="font-bold text-custom-blue text-lg">Rp {{ formatRupiah(product.price) }}</p>
-                                <div class="quantity-container flex items-center shrink-0 rounded-2xl border border-custom-stroke p-1.5 bg-custom-background">
+                                <div class="quantity-container flex items-center shrink-0 rounded-2xl border border-custom-stroke p-1 bg-custom-background">
                                     <button type="button" class="subtract size-4 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                                         :disabled="product.quantity <= 1"
                                         @click="handleDecrease(store.storeId, product.id)">
                                         <span class="text-[16px] font-medium leading-none align-middle mb-0.5">-</span>
                                     </button>
-                                    <div class="h-[14px] border border-custom-stroke mx-1.5"></div>
+                                    <div class="h-[14px] border border-custom-stroke mx-1"></div>
                                     <input type="text" inputmode="numeric" pattern="[0-9]*"
-                                        class="amount appearance-none w-[20px] min-w-0 text-center font-bold text-base bg-transparent focus:outline-none"
+                                        style="width: 50px;"
+                                        class="amount appearance-none min-w-0 text-center font-bold text-base bg-transparent focus:outline-none"
                                         v-model.number="product.quantity"
                                         @input="handleQuantityInput(store.storeId, product)"
                                         @blur="handleQuantityBlur(product)">
-                                    <div class="h-[14px] border border-custom-stroke mx-1.5"></div>
+                                    <div class="h-[14px] border border-custom-stroke mx-1"></div>
                                     <button type="button" class="add size-4 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                                         :disabled="product.quantity >= product.stock"
                                         @click="handleIncrease(store.storeId, product.id)">
