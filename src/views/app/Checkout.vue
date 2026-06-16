@@ -146,6 +146,14 @@ const handleSubmit = async () => {
         transaction.value.buyer_id = user.value.buyer.id;
     }
 
+    if (selectedCarts.value.length > 0) {
+        const store = selectedCarts.value[0];
+        transaction.value.products = store.products.map(p => ({
+            product_id: p.id,
+            qty: p.quantity
+        }));
+    }
+
     const response = await createTransaction(transaction.value);
 
     if (response && response.snap_token) {
@@ -173,6 +181,42 @@ const handleSubmit = async () => {
         }
     }
 };
+
+const resetDelivery = () => {
+    selectedCourier.value = null
+    deliveryFee.value = 0
+    transaction.value.shipping = null
+    transaction.value.shipping_type = null
+}
+
+const handleDecrease = (storeId, productId) => {
+    cart.decreaseQuantity(storeId, productId)
+    resetDelivery()
+}
+
+const handleIncrease = (storeId, productId) => {
+    cart.increaseQuantity(storeId, productId)
+    resetDelivery()
+}
+
+const handleQuantityInput = (storeId, product) => {
+    resetDelivery()
+    let qty = Number(product.quantity)
+    if (isNaN(qty) || qty < 1) {
+        product.quantity = 1
+    } else if (qty > product.stock) {
+        product.quantity = product.stock
+        alert(`Maksimal pembelian untuk produk ini adalah ${product.stock} unit`)
+    }
+    cart.save()
+}
+
+const handleQuantityBlur = (product) => {
+    if (!product.quantity || product.quantity < 1) {
+        product.quantity = 1
+        cart.save()
+    }
+}
 
 // Close modal functionality
 const closeModal = () => {
@@ -243,9 +287,27 @@ onMounted(() => {
                                     <span>{{ product.weight }} KG</span>
                                 </p>
                             </div>
-                            <div class="flex flex-col shrink-0 items-end">
-                                <p class="font-bold text-custom-blue">Rp {{ formatRupiah(product.price) }}</p>
-                                <p class="font-semibold text-grey">({{ product.quantity }}x)</p>
+                            <div class="flex flex-col shrink-0 items-end gap-2">
+                                <p class="font-bold text-custom-blue text-lg">Rp {{ formatRupiah(product.price) }}</p>
+                                <div class="quantity-container flex items-center shrink-0 rounded-2xl border border-custom-stroke p-1.5 bg-custom-background">
+                                    <button type="button" class="subtract size-4 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                        :disabled="product.quantity <= 1"
+                                        @click="handleDecrease(store.storeId, product.id)">
+                                        <span class="text-[16px] font-medium leading-none align-middle mb-0.5">-</span>
+                                    </button>
+                                    <div class="h-[14px] border border-custom-stroke mx-1.5"></div>
+                                    <input type="text" inputmode="numeric" pattern="[0-9]*"
+                                        class="amount appearance-none w-[20px] min-w-0 text-center font-bold text-base bg-transparent focus:outline-none"
+                                        v-model.number="product.quantity"
+                                        @input="handleQuantityInput(store.storeId, product)"
+                                        @blur="handleQuantityBlur(product)">
+                                    <div class="h-[14px] border border-custom-stroke mx-1.5"></div>
+                                    <button type="button" class="add size-4 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                        :disabled="product.quantity >= product.stock"
+                                        @click="handleIncrease(store.storeId, product.id)">
+                                        <span class="text-[14px] font-medium leading-none align-middle mb-0.5">+</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <hr class="border-custom-stroke">
