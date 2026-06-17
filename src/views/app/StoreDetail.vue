@@ -40,10 +40,10 @@ onMounted(async () => {
     <header class="w-full max-w-[1920px] mx-auto overflow-hidden bg-custom-background">
         <div class="flex flex-col w-full max-w-[1280px] py-6 px-[52px] gap-3 mx-auto">
             <div class="flex items-center gap-3">
-                <a href="main.html"
+                <RouterLink :to="{ name: 'app.home' }"
                     class="font-medium text-lg text-custom-grey last:font-semibold last:text-custom-blue">
                     Homepage
-                </a>
+                </RouterLink>
                 <span class="font-medium text-xl text-custom-grey">/</span>
                 <a href="browse-category.html"
                     class="font-medium text-lg text-custom-grey last:font-semibold last:text-custom-blue">

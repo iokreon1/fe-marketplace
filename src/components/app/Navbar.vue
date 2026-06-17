@@ -179,13 +179,13 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="flex items-center gap-8 flex-wrap">
-                    <a href="main.html" class="group flex items-center gap-2 active">
+                    <RouterLink :to="{ name: 'app.home' }" class="group flex items-center gap-2" active-class="active">
                         <img src="@/assets/images/icons/home-blue-fill.svg"
                             class="hidden size-6 shrink-0 group-[&.active]:flex" alt="icon">
                         <img src="@/assets/images/icons/home-grey.svg"
                             class="flex size-6 shrink-0 group-[&.active]:hidden" alt="icon">
                         <span class="font-semibold text-custom-grey group-[&.active]:text-custom-blue">Homepage</span>
-                    </a>
+                    </RouterLink>
                     <a href="#" class="group flex items-center gap-2">
                         <img src="@/assets/images/icons/flash-grey.svg" class="flex size-6 shrink-0" alt="icon">
                         <span class="font-semibold text-custom-grey">Flash Deals</span>

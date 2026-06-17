@@ -44,16 +44,38 @@ const checkUserAuth = () => {
 const currentPage = ref(1)
 const reviewsPerPage = 4
 
-const paginatedReviews = computed(() => {
+const selectedRatingFilter = ref('all')
+const filterWithPhoto = ref(false)
+const filterWithText = ref(false)
+
+const filteredReviews = computed(() => {
     if (!product.value?.product_reviews) return []
+    return product.value.product_reviews.filter(review => {
+        if (selectedRatingFilter.value !== 'all' && review.rating !== Number(selectedRatingFilter.value)) {
+            return false
+        }
+        if (filterWithPhoto.value && !review.photo) {
+            return false
+        }
+        if (filterWithText.value && (!review.review || review.review.trim() === '' || review.review === 'Tidak ada ulasan tertulis.')) {
+            return false
+        }
+        return true
+    })
+})
+
+const paginatedReviews = computed(() => {
     const start = (currentPage.value - 1) * reviewsPerPage
     const end = start + reviewsPerPage
-    return product.value.product_reviews.slice(start, end)
+    return filteredReviews.value.slice(start, end)
 })
 
 const totalPages = computed(() => {
-    if (!product.value?.product_reviews) return 0
-    return Math.ceil(product.value.product_reviews.length / reviewsPerPage)
+    return Math.ceil(filteredReviews.value.length / reviewsPerPage)
+})
+
+watch([selectedRatingFilter, filterWithPhoto, filterWithText], () => {
+    currentPage.value = 1
 })
 
 const prevPage = () => {
@@ -306,6 +328,44 @@ const handleQuantityBlur = () => {
                 </div>
                 <div id="Testimony" class="flex flex-col gap-6">
                     <p class="font-bold text-lg">Product Reviews</p>
+
+                    <!-- Review Filters -->
+                    <div class="flex flex-wrap items-center gap-4 py-2 border-b border-custom-stroke pb-4">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-sm font-semibold text-custom-grey mr-2">Filter Rating:</span>
+                            <button type="button" 
+                                v-for="opt in ['all', 5, 4, 3, 2, 1]" 
+                                :key="opt"
+                                @click="selectedRatingFilter = opt"
+                                class="flex items-center gap-1.5 py-2 px-4 rounded-full text-sm font-bold border transition-300 cursor-pointer"
+                                :class="selectedRatingFilter === opt ? 'bg-custom-blue border-custom-blue text-white shadow-sm' : 'border-custom-stroke text-custom-grey bg-white hover:bg-gray-50'">
+                                <span v-if="opt === 'all'">Semua Bintang</span>
+                                <span v-else class="flex items-center gap-1">
+                                    {{ opt }} 
+                                    <img :src="StarActive" class="size-4 -mt-0.5" alt="star">
+                                </span>
+                            </button>
+                        </div>
+                        <div class="h-6 w-[1.5px] bg-custom-stroke hidden md:block"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-custom-grey mr-2">Media:</span>
+                            <button type="button"
+                                @click="filterWithPhoto = !filterWithPhoto"
+                                class="flex items-center gap-1.5 py-2 px-4 rounded-full text-sm font-bold border transition-300 cursor-pointer"
+                                :class="filterWithPhoto ? 'bg-custom-blue border-custom-blue text-white shadow-sm' : 'border-custom-stroke text-custom-grey bg-white hover:bg-gray-50'">
+                                <span>Dengan Foto 📷</span>
+                                <span v-if="filterWithPhoto">✓</span>
+                            </button>
+                            <button type="button"
+                                @click="filterWithText = !filterWithText"
+                                class="flex items-center gap-1.5 py-2 px-4 rounded-full text-sm font-bold border transition-300 cursor-pointer"
+                                :class="filterWithText ? 'bg-custom-blue border-custom-blue text-white shadow-sm' : 'border-custom-stroke text-custom-grey bg-white hover:bg-gray-50'">
+                                <span>Dengan Ulasan ✍️</span>
+                                <span v-if="filterWithText">✓</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4" v-if="paginatedReviews && paginatedReviews.length > 0">
                         <div class="flex flex-col w-full rounded-[20px] border border-custom-stroke p-5 gap-4"
                              v-for="review in paginatedReviews" :key="review.id">
@@ -333,7 +393,12 @@ const handleQuantityBlur = () => {
                     </div>
                     <div class="flex flex-col items-center justify-center p-8 text-center text-custom-grey border border-custom-stroke rounded-[20px]" v-else>
                         <img src="@/assets/images/icons/note-remove-grey.svg" class="size-12 mb-2 opacity-50" alt="icon">
-                        <p class="font-semibold text-sm">Belum ada ulasan untuk produk ini</p>
+                        <p class="font-semibold text-sm" v-if="product?.product_reviews && product.product_reviews.length > 0">
+                            Tidak ada ulasan yang cocok dengan filter yang dipilih.
+                        </p>
+                        <p class="font-semibold text-sm" v-else>
+                            Belum ada ulasan untuk produk ini.
+                        </p>
                     </div>
                     <div id="Pagination" class="flex items-center gap-6" v-if="totalPages > 1">
                         <button @click="prevPage" :disabled="currentPage === 1"

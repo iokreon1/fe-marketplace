@@ -3,9 +3,9 @@
         <div class="flex flex-col w-full max-w-[1280px] px-[52px] mx-auto gap-9">
             <div class="flex gap-[72px]">
                 <div class="flex flex-col gap-6 w-[349px]">
-                    <a href="main.html" class="flex shrink-0">
+                    <RouterLink :to="{ name: 'app.home' }" class="flex shrink-0">
                         <img src="@/assets/images/logos/logo.svg" class="h-8" alt="logo">
-                    </a>
+                    </RouterLink>
                     <p class="font-medium text-custom-grey">Lorem Ipsum is simply dummy text of the printing and
                         typesetting industry. Lorem Ipsum has been the industry's standard dummy text</p>
                 </div>
