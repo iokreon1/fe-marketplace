@@ -41,6 +41,7 @@ import ProfileEdit from '@/views/admin/ProfileEdit.vue'
 import Search from '@/views/app/Search.vue'
 import CategoriesAll from '@/views/app/CategoriesAll.vue'
 import StoresAll from '@/views/app/StoresAll.vue'
+import NotificationsList from '@/views/app/NotificationsList.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -122,6 +123,14 @@ const router = createRouter({
           path: '/checkout',
           name: 'app.checkout',
           component: Checkout,
+          meta: {
+            requiresAuth: true
+          }
+        },
+        {
+          path: '/notifications',
+          name: 'app.notification-list',
+          component: NotificationsList,
           meta: {
             requiresAuth: true
           }
@@ -304,7 +313,7 @@ const router = createRouter({
         },
         {
           path: 'store-balance',
-          name: 'admin.store-balanace',
+          name: 'admin.store-balance',
           component: StoreBalanceList,
           meta: {
             title: 'Store Wallet',

@@ -5,6 +5,7 @@ import Alert from '@/components/admin/Alert.vue';
 import { formatRupiah, formatToClientTimezone } from '@/helpers/format';
 import { useTransactionStore } from '@/stores/transaction';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { onMounted } from 'vue';
@@ -23,6 +24,8 @@ const { fetchTransactionById, updateTransaction } = transactionStore
 
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
+
+const notificationStore = useNotificationStore()
 
 const reviewsData = ref({})
 
@@ -113,11 +116,13 @@ const handleUpdateData = async (updatePayload) => {
     })
 
     fetchData()
+    notificationStore.fetchUnreadCount()
 }
 
 const handleSimulatePayment = async () => {
     await transactionStore.simulatePayment(transaction.value.id)
     fetchData()
+    notificationStore.fetchUnreadCount()
 }
 
 const handleAcceptOrder = () => {

@@ -3,6 +3,7 @@ import { formatRupiah } from '@/helpers/format';
 import { useCartStore } from '@/stores/cart'
 import { useTransactionStore } from '@/stores/transaction';
 import { useAuthStore } from '@/stores/auth';
+import { useNotificationStore } from '@/stores/notification';
 import { storeToRefs } from 'pinia';
 import { onMounted, ref, computed } from 'vue';
 import { debounce } from 'lodash';
@@ -11,6 +12,7 @@ import { debounce } from 'lodash';
 const authStore = useAuthStore()
 const cart = useCartStore()
 const transactionStore = useTransactionStore()
+const notificationStore = useNotificationStore()
 
 // Store refs
 const { user } = storeToRefs(authStore)
@@ -155,6 +157,9 @@ const handleSubmit = async () => {
     }
 
     const response = await createTransaction(transaction.value);
+
+    // Fetch unread count immediately since notification is created on checkout
+    notificationStore.fetchUnreadCount()
 
     if (response && response.snap_token) {
         window.snap.pay(response.snap_token, {
