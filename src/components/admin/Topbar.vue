@@ -107,6 +107,7 @@ onUnmounted(() => {
 
                     <!-- Dropdown Menu -->
                     <div id="Notifications-Dropdown" v-if="showNotificationsDropdown" 
+                         style="max-height: 420px; min-height: 100px;"
                          class="absolute right-0 mt-3 w-[360px] bg-white rounded-2xl border border-custom-stroke shadow-[0px_6px_30px_0px_#00000017] z-50 p-4 flex flex-col gap-3">
                         <div class="flex items-center justify-between border-b border-custom-stroke pb-2">
                             <h4 class="font-bold text-base text-custom-black">Notifikasi</h4>
@@ -116,7 +117,7 @@ onUnmounted(() => {
                                 Tandai semua dibaca
                             </button>
                         </div>
-                        <div class="flex flex-col gap-2 max-h-[280px] overflow-y-auto hide-scrollbar">
+                        <div class="flex flex-col gap-2 custom-scrollbar min-h-0" style="overflow-y: auto; flex: 1 1 auto;">
                             <div v-if="notificationStore.notifications.length === 0" 
                                  class="text-center py-8 text-custom-grey text-sm font-semibold">
                                 Tidak ada notifikasi baru
@@ -163,3 +164,20 @@ onUnmounted(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+</style>
